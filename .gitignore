@@ -1,0 +1,7 @@
+.qmake*
+*.sln
+*.vcxproj*
+.vs
+debug
+release
+x64

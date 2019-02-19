@@ -18,12 +18,14 @@ private:
     size_type m_data_size;
 
 public:
+    // Construct empty vector
     explicit CVector() noexcept
     {
         m_data_size = 0;
         m_data = nullptr;
     }
 
+    // Constuct vector filled with 'count' of 'value'
     explicit CVector( size_type count, const T& value = T() )
     {
         m_data_size = count;
@@ -35,6 +37,7 @@ public:
         
     }
     
+    // Construct vector filled with 'count' of default 'T()'
     explicit CVector( size_type count )
     {
         m_data_size = count;
@@ -45,23 +48,34 @@ public:
 
     }
 
-    explicit CVector( const CVector& other )
+    // Copy constructor
+    explicit CVector( const CVector<value_type>& other )
     {
         m_data_size = other.size();
         m_data = new value_type[m_data_size];
         for( size_type i = 0; i < m_data_size; i++ )
         {
-            m_data[i] = other.data()[i];
+            m_data[i] = other.m_data[i];
         }
 
     }
 
-    explicit CVector( CVector&& other )
+    // Move constructor
+    explicit CVector( CVector<value_type>&& other )
     {
         m_data_size = other.size();
-        m_data = std::move( other.data() );
+        m_data = new value_type[m_data_size];
+        for( size_type i = 0; i < m_data_size; i++ )
+        {
+            m_data[i] = other.m_data[i];
+        }
+
+        other.m_data_size = 0;
+        delete [] other.m_data;
+        other.m_data = nullptr;
     }
 
+    // Initializer constructor
     explicit CVector( std::initializer_list<value_type> initl )
     {
         m_data_size = initl.size();
@@ -71,6 +85,40 @@ public:
             m_data[i] = *it;
         }
 
+    }
+
+    // Copy assignment
+    void operator=( CVector<value_type>& other )
+    {
+        m_data_size = other.size();
+        m_data = new value_type[m_data_size];
+        for( size_type i = 0; i < m_data_size; i++ )
+        {
+            m_data[i] = other.m_data[i];
+        }
+
+    }
+
+    // Move assignment
+    void operator=( CVector<value_type>&& other )
+    {
+        m_data_size = other.size();
+        m_data = new value_type[m_data_size];
+        for( size_type i = 0; i < m_data_size; i++ )
+        {
+            m_data[i] = other.m_data[i];
+        }
+
+        other.m_data_size = 0;
+        delete [] other.m_data;
+        other.m_data = nullptr;
+    }
+
+    ~CVector()
+    {
+        m_data_size = 0;
+        delete [] m_data_size;
+        m_data_size = nullptr;
     }
 
     const size_type size() noexcept
