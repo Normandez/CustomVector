@@ -126,20 +126,21 @@ public:
         _copy_other( static_cast< const CVector& > (other) );
 
         other.m_size = 0;
-        delete [] other.m_data;
-        other.m_data = nullptr;
+        other.m_capacity = 0;
+        other._unalloc();
     }
 
     // Initializer constructor
     explicit CVector( std::initializer_list<T> initl )
     {
         m_size = initl.size();
-        m_data = new value_type[m_size];
+        m_capacity = m_size;
+        _unalloc();
+        _alloc();
         for( auto it = initl.begin(), size_type i = 0; it != initl.end(); it++, size_type++ )
         {
             m_data[i] = *it;
         }
-
     }
 
     ~CVector()
@@ -159,8 +160,8 @@ public:
         _copy_other( static_cast< const CVector& > (other) );
 
         other.m_size = 0;
-        delete [] other.m_data;
-        other.m_data = nullptr;
+        other.m_capacity = 0;
+        other._unalloc();
     }
 
     // Custom vector assignment
@@ -175,7 +176,6 @@ public:
     // Get value by reference via method
     reference at( size_type pos )
     {
-
         if( pos > m_size )
         {
             throw std::out_of_range("'pos' out of range");
@@ -186,7 +186,6 @@ public:
     // Get value by const reference via method
     const_reference at( size_type pos ) const
     {
-
         if( pos > m_size )
         {
             throw std::out_of_range("'pos' out of range");
@@ -265,17 +264,8 @@ public:
     // Increase the capacity of vector
     void reserve( size_type new_cap )
     {
-
-        if( mew_cap <= m_size )
-        {
-            return;
-        }
-
-        if( new_cap > max_size() )
-        {
-            throw std::length_error("'new_cap' more than max_size()");
-        }
-
+        if( mew_cap <= m_size ) return;
+        if( new_cap > max_size() ) throw std::length_error("'new_cap' more than max_size()");
         m_capacity = new_cap;
         _realloc();
     }
@@ -289,13 +279,11 @@ public:
     // Removed unused capacity
     void shrink_to_fit()
     {
-
         if( m_capacity > m_size )
         {
             m_capacity = m_size;
             _realloc();
         }
-
     }
 //=============
 
@@ -303,8 +291,7 @@ public:
     // Clear vector (capacity not changed)
     void clear() noexcept
     {
-        m_size = 0;
-        delete [] m_data;
+        _clear();
     }
 
     // Inserts value 'value' in position 'pos'
@@ -319,12 +306,6 @@ public:
         
     }
 //=============
-
-    const size_type size() noexcept
-    {
-        return m_size;
-    }
-    
 };
 
 #endif //CVECTOR_H
