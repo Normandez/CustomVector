@@ -18,55 +18,79 @@ public:
 private:
     pointer m_data;
     size_type m_size;
-    size_type m_capacity;       // TODO
+    size_type m_capacity;
 
-    // Internal cleanupper (use only when internal data not empty and valid)
-    void _clear()
+//=============< Memory managment >=============
+    // Alloc underlying data
+    void _alloc()
     {
-        m_size = 0;
-
-        delete [] m_data;
-        m_data = nullptr;
+        if(!m_data)
+        {
+            m_data = ::operator new(m_capacity);
+        }
     }
 
-    // Internal copy 'other' logic
-    void _copy_other( const CVector& _other )
+    // Unalloc underlying data
+    void _unalloc()
     {
-        m_size = _other.size();
-        m_data = new value_type[m_size];
-        for( size_type it = 0; it < m_size; it++ )
+        if(m_data)
         {
-            m_data[it] = _other.m_data[it];
+            delete[] m_data;
+            m_data = nullptr;
         }
-
-    }
-
-    // Internal assigner (use only after cleanup)
-    void _assign( size_type _count, const_reference _value = value_type() )
-    {
-        m_size = _count;
-        m_data = new value_type[_count];
-        for( size_type it = 0; it < _count; it++ )
-        {
-            m_data[it] = _value;
-        }
-
     }
 
     // Capacity change reallocation
-    void _realloc( size_type _new_cap )
+    void _realloc()
     {
         pointer buf_data = m_data;
         m_data = nullptr;
-        m_data = new value_type[_new_cap];
+        _alloc();
+
         for( size_type it = 0; it < m_size; it++ )
         {
             m_data[it] = buf_data[it];
         }
 
         delete [] buf_data;
-        buf_data = nullptr;
     }
+//=============
+
+//=============< Utils >=============
+    // Internal cleanupper (use only when internal data not empty and valid)
+    void _clear()
+    {
+        m_size = 0;
+        m_capacity = 0;
+        _unalloc();
+    }
+
+    // Internal copy 'other' logic
+    void _copy_other( const CVector& _other )
+    {
+        m_size = _other.m_size;
+        m_capacity = _other.m_capacity;
+        _unalloc();
+        _alloc();
+        for( size_type it = 0; it < m_size; it++ )
+        {
+            m_data[it] = _other.m_data[it];
+        }
+    }
+
+    // Internal assigner (use only after cleanup)
+    void _assign( size_type _count, const_reference _value = value_type() )
+    {
+        m_size = _count;
+        m_capacity = m_size;
+        _unalloc();
+        _alloc();
+        for( size_type it = 0; it < m_size; it++ )
+        {
+            m_data[it] = _value;
+        }
+    }
+//=============
 
 public:
 //=============< Initializers >=============
@@ -74,6 +98,7 @@ public:
     explicit CVector() noexcept
     {
         m_size = 0;
+        m_capacity = 0;
         m_data = nullptr;
     }
 
@@ -251,7 +276,8 @@ public:
             throw std::length_error("'new_cap' more than max_size()");
         }
 
-        _realloc(new_cap);
+        m_capacity = new_cap;
+        _realloc();
     }
 
     // Returns current capacity
@@ -266,9 +292,31 @@ public:
 
         if( m_capacity > m_size )
         {
-            _realloc(m_size);
+            m_capacity = m_size;
+            _realloc();
         }
 
+    }
+//=============
+
+//=============< Modifiers >=============
+    // Clear vector (capacity not changed)
+    void clear() noexcept
+    {
+        m_size = 0;
+        delete [] m_data;
+    }
+
+    // Inserts value 'value' in position 'pos'
+    reference insert( size_type pos, const T& value )
+    {
+
+        if( pos > m_size )
+        {
+            throw std::length_error("'pos' is out of range");
+        }
+
+        
     }
 //=============
 
