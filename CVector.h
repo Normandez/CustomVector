@@ -90,6 +90,40 @@ private:
             m_data[it] = _value;
         }
     }
+
+    // Internal inserter (call only after capacity chk)
+    void _insert( size_type _pos, const_reference _value )
+    {
+        if( _pos == 0 )
+        {
+            _push_front(_value);
+            return;
+        }
+
+        size_type r_buf_length = m_size - _pos;
+        value_type r_buf [r_buf_length];
+        for( size_type it = 0; it < r_buf_length; it++ ) r_buf[it] = m_data[_pos + it];
+        m_data[_pos] = _value;
+        m_size++;
+        for ( size_type it = _pos + 1; it < m_size; it++ ) m_data[it] = r_buf[it - _pos - 1];
+    }
+
+    // Internal front pusher (call only after capacity chk)
+    void _push_front( const_reference _value )
+    {
+        value_type data_buf [m_size];
+        for ( size_type it = 0; it < m_size; it++ ) data_buf[it] = m_data[it];
+        m_data[0] = _value;
+        m_size++;
+        for ( size_type it = 1; it < m_size; it++ ) m_data[it] = data_buf[it-1];
+    }
+
+    // Internal back pusher (call only after capacity chk)
+    void _push_back( const_reference _value )
+    {
+        m_data[m_size] = _value;
+        m_size++;
+    }
 //=============
 
 public:
@@ -294,16 +328,52 @@ public:
         _clear();
     }
 
-    // Inserts value 'value' in position 'pos'
+    // Inserts value 'value' in position 'pos' by const reference
     reference insert( size_type pos, const T& value )
     {
+        if( pos <= m_size )
+        {
+            if( ( m_size + 1 ) > m_capacity )
+            {
+                m_capacity = m_capacity * 2;
+                _realloc();
+            }
 
-        if( pos > m_size )
+            _insert( pos, value );
+        }
+        else
         {
             throw std::length_error("'pos' is out of range");
         }
 
-        
+        return m_data[pos];
+    }
+
+    // Inserts value 'value' in position 'pos' by rvalue reference
+    reference insert( size_type pos, T&& value )
+    {
+        if( pos <= m_size )
+        {
+            if( ( m_size + 1 ) > m_capacity )
+            {
+                m_capacity = m_capacity * 2;
+                _realloc();
+            }
+
+            _insert( pos, static_cast<const T& value> (value) );
+        }
+        else
+        {
+            throw std::length_error("'pos' is out of range");
+        }
+
+        return m_data[pos];
+    }
+
+    // Inserts 'count' copies of 'value' in position 'pos' by const reference
+    reference insert( size_type pos, size_type count, const T& value )
+    {
+
     }
 //=============
 };
