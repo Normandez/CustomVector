@@ -78,6 +78,15 @@ private:
         }
     }
 
+    // Internal move 'other' logic
+    void _move_other( const CVector& _other )
+    {
+    	_unalloc();
+    	m_size = _other.m_size;
+    	m_capacity = _other.m_capacity;
+    	m_data = _other.m_data;
+    }
+
     // Internal assigner (use only after cleanup)
     void _assign( size_type _count, const_reference _value = value_type() )
     {
@@ -157,11 +166,11 @@ public:
     // Move constructor
     explicit CVector( CVector&& other )
     {
-        _copy_other( static_cast< const CVector& > (other) );
+    	_move_other( static_cast<const CVector&> (other) );
 
         other.m_size = 0;
         other.m_capacity = 0;
-        other._unalloc();
+        other.m_data = nullptr;
     }
 
     // Initializer constructor
@@ -191,11 +200,11 @@ public:
     // Move assignment
     void operator=( CVector&& other )
     {
-        _copy_other( static_cast< const CVector& > (other) );
+        _move_other( static_cast<const CVector&> (other) );
 
         other.m_size = 0;
         other.m_capacity = 0;
-        other._unalloc();
+        other.m_data = nullptr;
     }
 
     // Custom vector assignment
