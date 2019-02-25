@@ -26,7 +26,8 @@ private:
     {
         if(!m_data)
         {
-            m_data = ::operator new(m_capacity);
+            
+            m_data = static_cast<pointer> ( ::operator new( m_capacity * sizeof(value_type) ) );
         }
     }
 
@@ -110,21 +111,23 @@ private:
         }
 
         size_type r_buf_length = m_size - _pos;
-        value_type r_buf [r_buf_length];
+        pointer r_buf = new value_type [r_buf_length];
         for( size_type it = 0; it < r_buf_length; it++ ) r_buf[it] = m_data[_pos + it];
         m_data[_pos] = _value;
         m_size++;
         for ( size_type it = _pos + 1; it < m_size; it++ ) m_data[it] = r_buf[it - _pos - 1];
+        delete [] r_buf;
     }
 
     // Internal front pusher (call only after capacity chk)
     void _push_front( const_reference _value )
     {
-        value_type data_buf [m_size];
+        pointer data_buf = new value_type [m_size];
         for ( size_type it = 0; it < m_size; it++ ) data_buf[it] = m_data[it];
         m_data[0] = _value;
         m_size++;
         for ( size_type it = 1; it < m_size; it++ ) m_data[it] = data_buf[it-1];
+        delete [] data_buf;
     }
 
     // Internal back pusher (call only after capacity chk)
@@ -369,7 +372,8 @@ public:
                 _realloc();
             }
 
-            _insert( pos, static_cast<const T& value> (value) );
+            const_reference _value = value;
+            _insert( pos, _value );
         }
         else
         {
@@ -379,10 +383,53 @@ public:
         return m_data[pos];
     }
 
-    // Inserts 'count' copies of 'value' in position 'pos' by const reference
+    // Inserts 'count' copies of 'value' at position 'pos' by const reference
     reference insert( size_type pos, size_type count, const T& value )
     {
+        if( pos <= m_size )
+        {
+            while( ( m_size + count ) > m_capacity )
+            {
+                m_capacity = m_capacity * 2;
+                _realloc();
+            }
 
+            while( count > 0 )
+            {
+                _insert( pos, static_cast<const T& value> (value) );
+                count--;
+            }
+        }
+        else
+        {
+            throw std::length_error("'pos' is out of range");
+        }
+
+        return m_data[pos];
+    }
+
+    // Inserts values from 'ilist' at position 'pos'
+    reference insert( size_type pos, std::initializer_list<T> ilist )
+    {
+        if( pos <= m_size )
+        {
+            while( ( m_size + ilist.size() ) > m_capacity )
+            {
+                m_capacity = m_capacity * 2;
+                _realloc();
+            }
+
+            for( auto it = ilist.end() - 1; it != ilist.begin() - 1; it-- )
+            {
+                _insert( pos, *it );
+            }
+        }
+        else
+        {
+            throw std::length_error("'pos' is out of range");
+        }
+
+        return m_data[pos];
     }
 //=============
 };
