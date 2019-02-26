@@ -311,7 +311,7 @@ public:
     // Increase the capacity of vector
     void reserve( size_type new_cap )
     {
-        if( mew_cap <= m_size ) return;
+        if( new_cap <= m_size ) return;
         if( new_cap > max_size() ) throw std::length_error("'new_cap' more than max_size()");
         m_capacity = new_cap;
         _realloc();
