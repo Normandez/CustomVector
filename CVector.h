@@ -261,7 +261,7 @@ public:
     // Get first element of array by cosnt reference
     const_reference front() const noexcept
     {
-        return m_data[0]
+        return m_data[0];
     }
 
     // Get last element of array by reference
