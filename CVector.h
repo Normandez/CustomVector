@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 template<class T>
 class CVector
@@ -26,8 +27,8 @@ private:
     {
         if(!m_data)
         {
-            
             m_data = static_cast<pointer> ( ::operator new( m_capacity * sizeof(value_type) ) );
+            //m_data = new value_type[m_capacity];
         }
     }
 
@@ -53,7 +54,7 @@ private:
             m_data[it] = buf_data[it];
         }
 
-        delete [] buf_data;
+        delete[] buf_data;
     }
 //=============
 
@@ -222,7 +223,7 @@ public:
     // Get value by reference via method
     reference at( size_type pos )
     {
-        if( pos > m_size )
+        if( pos >= m_size )
         {
             throw std::out_of_range("'pos' out of range");
         }
@@ -232,7 +233,7 @@ public:
     // Get value by const reference via method
     const_reference at( size_type pos ) const
     {
-        if( pos > m_size )
+        if( pos >= m_size )
         {
             throw std::out_of_range("'pos' out of range");
         }
@@ -343,7 +344,7 @@ public:
     // Inserts value 'value' in position 'pos' by const reference
     reference insert( size_type pos, const T& value )
     {
-        if( pos <= m_size )
+        if( pos < m_size )
         {
             if( ( m_size + 1 ) > m_capacity )
             {
@@ -364,7 +365,7 @@ public:
     // Inserts value 'value' in position 'pos' by rvalue reference
     reference insert( size_type pos, T&& value )
     {
-        if( pos <= m_size )
+        if( pos < m_size )
         {
             if( ( m_size + 1 ) > m_capacity )
             {
@@ -386,7 +387,7 @@ public:
     // Inserts 'count' copies of 'value' at position 'pos' by const reference
     reference insert( size_type pos, size_type count, const T& value )
     {
-        if( pos <= m_size )
+        if( pos < m_size )
         {
             while( ( m_size + count ) > m_capacity )
             {
@@ -411,7 +412,7 @@ public:
     // Inserts values from 'ilist' at position 'pos'
     reference insert( size_type pos, std::initializer_list<T> ilist )
     {
-        if( pos <= m_size )
+        if( pos < m_size )
         {
             while( ( m_size + ilist.size() ) > m_capacity )
             {
@@ -423,6 +424,29 @@ public:
             {
                 _insert( pos, *it );
             }
+        }
+        else
+        {
+            throw std::length_error("'pos' is out of range");
+        }
+
+        return m_data[pos];
+    }
+
+    // Inserts element before 'pos' via T() constructor
+    template<class... Args>
+    reference emplace( size_type pos, Args&&... args )
+    {
+        if( pos < m_size )
+        {
+            if( ( m_size + 1 ) > m_capacity )
+            {
+                m_capacity = m_capacity * 2;
+                _realloc();
+            }
+
+            const_reference _value = T(std::forward<Args&&>(args)...);
+            _insert( pos, _value );
         }
         else
         {
