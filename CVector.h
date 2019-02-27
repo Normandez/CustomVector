@@ -28,7 +28,6 @@ private:
         if(!m_data)
         {
             m_data = static_cast<pointer> ( ::operator new( m_capacity * sizeof(value_type) ) );
-            //m_data = new value_type[m_capacity];
         }
     }
 
@@ -37,7 +36,11 @@ private:
     {
         if(m_data)
         {
-            delete[] m_data;
+            for( size_type it = 0; it < m_size; it++ )
+            {
+                m_data[it].~value_type();
+            }
+            ::operator delete (m_data);
             m_data = nullptr;
         }
     }
@@ -52,9 +55,10 @@ private:
         for( size_type it = 0; it < m_size; it++ )
         {
             m_data[it] = buf_data[it];
+            buf_data[it].~value_type();
         }
 
-        delete[] buf_data;
+        ::operator delete (buf_data);
     }
 //=============
 
@@ -136,6 +140,13 @@ private:
     {
         m_data[m_size] = _value;
         m_size++;
+    }
+
+    // Internal remover at defined position
+    void _remove_at( size_type _pos )
+    {
+        m_data[_pos].~value_type();
+        
     }
 //=============
 
@@ -446,6 +457,21 @@ public:
             }
 
             const_reference _value = T(std::forward<Args&&>(args)...);
+            _insert( pos, _value );
+        }
+        else
+        {
+            throw std::length_error("'pos' is out of range");
+        }
+
+        return m_data[pos];
+    }
+
+    // Removes element in position 'pos' and returns reference on element after removed
+    reference erase( size_type pos )
+    {
+        if( pos < m_size )
+        {
             _insert( pos, _value );
         }
         else
