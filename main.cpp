@@ -21,9 +21,7 @@ struct Foo
 
     void PrintDigits()
     {
-        std::cout << "digit_a: " << digit_a << std::endl;
-        std::cout << "digit_b: " << digit_b << std::endl;
-        std::cout << std::endl;
+        std::cout << "digit_a: " << digit_a << ";;; digit_b: " << digit_b << " ";
     }
 
     int digit_a;
@@ -32,33 +30,44 @@ struct Foo
 
 int main( int argc, char* argv[] )
 {
-    CVector<Foo> foo_vec;
-    foo_vec.assign( 3, Foo(10, 10) );
-
-    for (size_t i = 0; i < 3; i++)
+    CVector<Foo> foo_vec{Foo(1, 1), Foo(2, 2), Foo(3, 3), Foo(4, 4), Foo(5, 5), Foo(6, 6), Foo(7, 7), Foo(8, 8), Foo(9, 9)};
+    for (size_t i = 0; i < 9; i++)
     {
         foo_vec.at(i).PrintDigits();
     }
-    //foo_vec.emplace( 1, 25, 25 );
-
     std::cout << "\n\n\n";
 
-    /*try
+    Foo ref = Foo(0, 0);
+    try
     {
-        for (size_t i = 0; i < 4; i++)
+        ref = foo_vec.erase(5, 7);
+    }
+    catch (...)
+    {
+        std::cout << "EXCEPTION RANGE" << std::endl;
+        system("pause");
+        return 1;
+    }
+
+    try
+    {
+        for (size_t i = 0; i < 7; i++)
         {
             foo_vec.at(i).PrintDigits();
         }
     }
-    catch (...)
+    catch(...)
     {
-        std::cout << "EXCEPTION\n\n";
-    }*/
+        std::cout << "EXCEPTION" << std::endl;
+    }
 
     std::cout << "\n\n\n";
     std::cout << foo_vec.size() << "\n";
     std::cout << foo_vec.capacity() << "\n";
 
-    //system("pause");
+    std::cout << "Returned ref: ";
+    ref.PrintDigits();
+
+    system("pause");
     return 0;
 }

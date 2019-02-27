@@ -4,6 +4,7 @@
 #include <memory>
 #include <stdexcept>
 #include <utility>
+#include <initializer_list>
 
 template<class T>
 class CVector
@@ -17,9 +18,9 @@ public:
     using const_pointer = const value_type*;
 
 private:
-    pointer m_data;
-    size_type m_size;
-    size_type m_capacity;
+    pointer m_data = nullptr;
+    size_type m_size = 0;
+    size_type m_capacity = 0;
 
 //=============< Memory managment >=============
     // Alloc underlying data
@@ -116,23 +117,28 @@ private:
         }
 
         size_type r_buf_length = m_size - _pos;
-        pointer r_buf = new value_type [r_buf_length];
+        pointer r_buf = static_cast<pointer> ( ::operator new ( r_buf_length * sizeof(value_type) ) );
         for( size_type it = 0; it < r_buf_length; it++ ) r_buf[it] = m_data[_pos + it];
         m_data[_pos] = _value;
         m_size++;
         for ( size_type it = _pos + 1; it < m_size; it++ ) m_data[it] = r_buf[it - _pos - 1];
-        delete [] r_buf;
+        for( size_type it = 0; it < r_buf_length; it++ ) r_buf[it].~value_type();
+        ::operator delete (r_buf);
     }
 
     // Internal front pusher (call only after capacity chk)
     void _push_front( const_reference _value )
     {
-        pointer data_buf = new value_type [m_size];
+        pointer data_buf = static_cast<pointer> ( ::operator new ( m_size * sizeof(value_type) ) );
         for ( size_type it = 0; it < m_size; it++ ) data_buf[it] = m_data[it];
         m_data[0] = _value;
         m_size++;
-        for ( size_type it = 1; it < m_size; it++ ) m_data[it] = data_buf[it-1];
-        delete [] data_buf;
+        for ( size_type it = 1; it < m_size; it++ )
+        {
+            m_data[it] = data_buf[it-1];
+            data_buf[it-1].~value_type();
+        }
+        ::operator delete (data_buf);
     }
 
     // Internal back pusher (call only after capacity chk)
@@ -146,7 +152,50 @@ private:
     void _remove_at( size_type _pos )
     {
         m_data[_pos].~value_type();
+
+        if( _pos == m_size ) return;   // Last element case
+
+        pointer data_buf = m_data;
+        m_data = nullptr;
+        _alloc();
+        for( size_type it = 0; it < m_size; it++ )
+        {
+            if( it >= _pos )
+            {
+                m_data[it] = data_buf[it+1];
+                data_buf[it+1].~value_type();
+            }
+            else
+            {
+                m_data[it] = data_buf[it];
+                data_buf[it].~value_type();
+            }
+        }
+        ::operator delete (data_buf);
+    }
+
+    // Internal in range remover [_first; _last)
+    void _remove_in_range( size_type _first, size_type _last )
+    {
+        for( size_type it = _first; it < _last; it++ ) m_data[it].~value_type();
         
+        pointer buf_data = m_data;
+        m_data = nullptr;
+        _alloc();
+        for( size_type it = 0; it < m_size; it++ )
+        {
+            if( it >= _first )
+            {
+                m_data[it] = buf_data[it + ( _last - _first )];
+                buf_data[it + ( _last - _first )].~value_type();
+            }
+            else
+            {
+                m_data[it] = buf_data[it];
+                buf_data[it].~value_type();
+            }
+        }
+        ::operator delete (buf_data);
     }
 //=============
 
@@ -195,7 +244,8 @@ public:
         m_capacity = m_size;
         _unalloc();
         _alloc();
-        for( auto it = initl.begin(), size_type i = 0; it != initl.end(); it++, size_type++ )
+        size_type i = 0;
+        for( auto it = initl.begin(); it != initl.end(); it++, i++ )
         {
             m_data[i] = *it;
         }
@@ -472,14 +522,38 @@ public:
     {
         if( pos < m_size )
         {
-            _insert( pos, _value );
+            m_size--;
+            _remove_at(pos);
         }
         else
         {
             throw std::length_error("'pos' is out of range");
         }
 
-        return m_data[pos];
+        if( pos == m_size )
+        {
+            return m_data[pos-1];
+        }
+        else
+        {
+            return m_data[pos];
+        }
+    }
+
+    // Removes element in range [first; last) and returns reference on element after removed
+    reference erase( size_type first, size_type last )
+    {
+        if( first < m_size && last < m_size && last >= first )
+        {
+            m_size -= (last - first);
+            _remove_in_range( first, last );
+        }
+        else
+        {
+            throw std::length_error("'pos' is out of range");
+        }
+
+        return m_data[last - (last - first)];
     }
 //=============
 };
