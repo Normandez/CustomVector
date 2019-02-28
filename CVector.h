@@ -28,6 +28,7 @@ private:
     {
         if(!m_data)
         {
+            if( m_capacity == 0 ) m_capacity++;
             m_data = static_cast<pointer> ( ::operator new( m_capacity * sizeof(value_type) ) );
         }
     }
@@ -59,7 +60,10 @@ private:
             buf_data[it].~value_type();
         }
 
-        ::operator delete (buf_data);
+        if(buf_data)
+        {
+            ::operator delete (buf_data);
+        }
     }
 //=============
 
@@ -554,6 +558,28 @@ public:
         }
 
         return m_data[last - (last - first)];
+    }
+
+    // Appends the given element value to the end of the container by const reference
+    void push_back( const T& value )
+    {
+        if( ( m_size + 1 ) > m_capacity )
+        {
+            m_capacity *= 2;
+            _realloc();
+        }
+        _push_back(value);
+    }
+
+    // Appends the given element value to the end of the container via move semantics
+    void push_back( T&& value )
+    {
+        if( ( m_size + 1 ) > m_capacity )
+        {
+            m_capacity *= 2;
+            _realloc();
+        }
+        _push_back(value);
     }
 //=============
 };
