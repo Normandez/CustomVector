@@ -17,8 +17,11 @@ public:
     using pointer = value_type*;
     using const_pointer = const value_type*;
 
+    using allocator_type = std::allocator <value_type>;
+
 private:
     pointer m_data = nullptr;
+    allocator_type m_allocator;
     size_type m_size = 0;
     size_type m_capacity = 0;
 
@@ -29,7 +32,7 @@ private:
         if(!m_data)
         {
             if( m_capacity == 0 ) m_capacity++;
-            m_data = static_cast<pointer> ( ::operator new( m_capacity * sizeof(value_type) ) );
+            m_data = m_allocator.allocate(m_capacity);
         }
     }
 
@@ -38,17 +41,17 @@ private:
     {
         if(m_data)
         {
-            for( size_type it = 0; it < m_size; it++ )
+            for( size_t it = 0 ; it < m_size; it++ )
             {
-                m_data[it].~value_type();
+                m_allocator.destroy( m_data + it );
             }
-            ::operator delete (m_data);
+            m_allocator.deallocate( m_data, m_capacity );
             m_data = nullptr;
         }
     }
 
     // Capacity change reallocation
-    void _realloc()
+    void _realloc( size_type _old_cap )
     {
         pointer buf_data = m_data;
         m_data = nullptr;
@@ -56,13 +59,14 @@ private:
 
         for( size_type it = 0; it < m_size; it++ )
         {
+            m_allocator.construct( m_data + it );
             m_data[it] = buf_data[it];
-            buf_data[it].~value_type();
+            m_allocator.destroy( buf_data + it );
         }
 
         if(buf_data)
         {
-            ::operator delete (buf_data);
+            m_allocator.deallocate( buf_data, _old_cap );
         }
     }
 //=============
@@ -71,9 +75,9 @@ private:
     // Internal cleanupper (use only when internal data not empty and valid)
     void _clear()
     {
+        _unalloc();
         m_size = 0;
         m_capacity = 0;
-        _unalloc();
     }
 
     // Internal copy 'other' logic
@@ -85,6 +89,7 @@ private:
         _alloc();
         for( size_type it = 0; it < m_size; it++ )
         {
+            m_allocator.construct( m_data + it );
             m_data[it] = _other.m_data[it];
         }
     }
@@ -107,6 +112,7 @@ private:
         _alloc();
         for( size_type it = 0; it < m_size; it++ )
         {
+            m_allocator.construct( m_data + it );
             m_data[it] = _value;
         }
     }
@@ -121,33 +127,42 @@ private:
         }
 
         size_type r_buf_length = m_size - _pos;
-        pointer r_buf = static_cast<pointer> ( ::operator new ( r_buf_length * sizeof(value_type) ) );
-        for( size_type it = 0; it < r_buf_length; it++ ) r_buf[it] = m_data[_pos + it];
+        pointer r_buf = m_allocator.allocate(r_buf_length);
+        for( size_type it = 0; it < r_buf_length; it++ )
+        {
+            m_allocator.construct( r_buf + it );
+            r_buf[it] = m_data[_pos + it];
+        }
         m_data[_pos] = _value;
         m_size++;
         for ( size_type it = _pos + 1; it < m_size; it++ ) m_data[it] = r_buf[it - _pos - 1];
-        for( size_type it = 0; it < r_buf_length; it++ ) r_buf[it].~value_type();
-        ::operator delete (r_buf);
+        for( size_type it = 0; it < r_buf_length; it++ ) m_allocator.destroy( r_buf + it );
+        m_allocator.deallocate( r_buf, r_buf_length );
     }
 
     // Internal front pusher (call only after capacity chk)
     void _push_front( const_reference _value )
     {
-        pointer data_buf = static_cast<pointer> ( ::operator new ( m_size * sizeof(value_type) ) );
-        for ( size_type it = 0; it < m_size; it++ ) data_buf[it] = m_data[it];
+        pointer data_buf = m_allocator.allocate(m_size);
+        for ( size_type it = 0; it < m_size; it++ )
+        {
+            m_allocator.construct( data_buf + it );
+            data_buf[it] = m_data[it];
+        }
         m_data[0] = _value;
         m_size++;
         for ( size_type it = 1; it < m_size; it++ )
         {
             m_data[it] = data_buf[it-1];
-            data_buf[it-1].~value_type();
+            m_allocator.destroy( data_buf + it - 1 );
         }
-        ::operator delete (data_buf);
+        m_allocator.deallocate( data_buf, m_size );
     }
 
     // Internal back pusher (call only after capacity chk)
     void _push_back( const_reference _value )
     {
+        m_allocator.construct( ( m_data + m_size ) );
         m_data[m_size] = _value;
         m_size++;
     }
@@ -155,7 +170,7 @@ private:
     // Internal remover at defined position
     void _remove_at( size_type _pos )
     {
-        m_data[_pos].~value_type();
+        m_allocator.destroy( m_data + _pos );
 
         if( _pos == m_size ) return;   // Last element case
 
@@ -164,42 +179,45 @@ private:
         _alloc();
         for( size_type it = 0; it < m_size; it++ )
         {
+            m_allocator.construct( m_data + it );
+
             if( it >= _pos )
             {
                 m_data[it] = data_buf[it+1];
-                data_buf[it+1].~value_type();
+                m_allocator.destroy( data_buf + it + 1 );
             }
             else
             {
                 m_data[it] = data_buf[it];
-                data_buf[it].~value_type();
+                m_allocator.destroy( data_buf + it );
             }
         }
-        ::operator delete (data_buf);
+        m_allocator.deallocate( data_buf, m_size - 1 );
     }
 
     // Internal in range remover [_first; _last)
     void _remove_in_range( size_type _first, size_type _last )
     {
-        for( size_type it = _first; it < _last; it++ ) m_data[it].~value_type();
+        for( size_type it = _first; it < _last; it++ ) m_allocator.destroy( m_data + it );
         
         pointer buf_data = m_data;
         m_data = nullptr;
         _alloc();
         for( size_type it = 0; it < m_size; it++ )
         {
+            m_allocator.construct( m_data + it );
             if( it >= _first )
             {
                 m_data[it] = buf_data[it + ( _last - _first )];
-                buf_data[it + ( _last - _first )].~value_type();
+                m_allocator.destroy( buf_data + it + ( _last - _first ) );
             }
             else
             {
                 m_data[it] = buf_data[it];
-                buf_data[it].~value_type();
+                m_allocator.destroy( buf_data + it );
             }
         }
-        ::operator delete (buf_data);
+        m_allocator.deallocate( buf_data, ( _last - _first ) );
     }
 //=============
 
@@ -251,6 +269,7 @@ public:
         size_type i = 0;
         for( auto it = initl.begin(); it != initl.end(); it++, i++ )
         {
+            m_allocator.construct( m_data + i );
             m_data[i] = *it;
         }
     }
@@ -378,8 +397,9 @@ public:
     {
         if( new_cap <= m_size ) return;
         if( new_cap > max_size() ) throw std::length_error("'new_cap' more than max_size()");
+        size_type old_cap = m_capacity;
         m_capacity = new_cap;
-        _realloc();
+        _realloc(old_cap);
     }
 
     // Returns current capacity
@@ -393,8 +413,9 @@ public:
     {
         if( m_capacity > m_size )
         {
+            size_type old_cap = m_capacity;
             m_capacity = m_size;
-            _realloc();
+            _realloc(old_cap);
         }
     }
 //=============
@@ -413,8 +434,9 @@ public:
         {
             if( ( m_size + 1 ) > m_capacity )
             {
+                size_type old_cap = m_capacity;
                 m_capacity = m_capacity * 2;
-                _realloc();
+                _realloc(old_cap);
             }
 
             _insert( pos, value );
@@ -434,8 +456,9 @@ public:
         {
             if( ( m_size + 1 ) > m_capacity )
             {
+                size_type old_cap = m_capacity;
                 m_capacity = m_capacity * 2;
-                _realloc();
+                _realloc(old_cap);
             }
 
             const_reference _value = value;
@@ -456,8 +479,9 @@ public:
         {
             while( ( m_size + count ) > m_capacity )
             {
+                size_type old_cap = m_capacity;
                 m_capacity = m_capacity * 2;
-                _realloc();
+                _realloc(old_cap);
             }
 
             while( count > 0 )
@@ -481,8 +505,9 @@ public:
         {
             while( ( m_size + ilist.size() ) > m_capacity )
             {
+                size_type old_cap = m_capacity;
                 m_capacity = m_capacity * 2;
-                _realloc();
+                _realloc(old_cap);
             }
 
             for( auto it = ilist.end() - 1; it != ilist.begin() - 1; it-- )
@@ -506,8 +531,9 @@ public:
         {
             if( ( m_size + 1 ) > m_capacity )
             {
+                size_type old_cap = m_capacity;
                 m_capacity = m_capacity * 2;
-                _realloc();
+                _realloc(old_cap);
             }
 
             const_reference _value = T(std::forward<Args&&>(args)...);
@@ -565,8 +591,9 @@ public:
     {
         if( ( m_size + 1 ) > m_capacity )
         {
+            size_type old_cap = m_capacity;
             m_capacity *= 2;
-            _realloc();
+            _realloc(old_cap);
         }
         _push_back(value);
     }
@@ -576,10 +603,13 @@ public:
     {
         if( ( m_size + 1 ) > m_capacity )
         {
+            size_type old_cap = m_capacity;
             m_capacity *= 2;
-            _realloc();
+            _realloc(old_cap);
         }
         _push_back(value);
+
+        m_allocator.destroy(&value);
     }
 //=============
 };
