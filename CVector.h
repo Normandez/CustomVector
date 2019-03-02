@@ -149,7 +149,8 @@ private:
             m_allocator.construct( data_buf + it );
             data_buf[it] = m_data[it];
         }
-        m_data[0] = _value;
+        m_allocator.construct( m_data + m_size );
+		m_data[m_size] = _value;
         m_size++;
         for ( size_type it = 1; it < m_size; it++ )
         {
@@ -610,6 +611,23 @@ public:
         _push_back(value);
 
         m_allocator.destroy(&value);
+    }
+
+	// Inserts element in the end of the container 'pos' via T() constructor
+    template<class... Args>
+    reference emplace_back( Args&&... args )
+    {
+        if( ( m_size + 1 ) > m_capacity )
+        {
+            size_type old_cap = m_capacity;
+            m_capacity = m_capacity * 2;
+            _realloc(old_cap);
+        }
+
+        const_reference _value = value_type( std::forward<Args&&>(args)... );
+		_insert( m_size, _value );
+
+        return m_data[m_size];
     }
 //=============
 };
