@@ -629,6 +629,13 @@ public:
 
         return m_data[m_size];
     }
+
+	// Removes the last element of the container
+	void pop_back()
+	{
+		m_allocator.destroy( m_data + m_size - 1 );
+		m_size--;
+	}
 //=============
 };
 
