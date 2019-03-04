@@ -220,6 +220,36 @@ private:
         }
         m_allocator.deallocate( buf_data, ( _last - _first ) );
     }
+
+    // Internal resizer
+    void _resize( size_type _count, const_reference _value = value_type() )
+    {
+        if( _count < m_size )
+        {
+            for( size_type it = _count; it < m_size; it++ )
+            {
+                m_allocator.destroy( m_data + it );
+                m_allocator.construct( m_data + it );
+                m_data[it] = _value;
+            }
+        }
+        else if( _count > m_size )
+        {
+            if( _count > m_capacity )
+            {
+                size_type old_cap = m_capacity;
+                m_capacity *= 2;
+                _realloc(old_cap);
+            }
+
+            for( size_type it = m_size; it <= _count; it++ )
+            {
+                m_allocator.construct( m_data + it );
+                m_data[it] = _value;
+            }
+        }
+        m_size = _count;
+    }
 //=============
 
 public:
@@ -261,7 +291,7 @@ public:
     }
 
     // Initializer constructor
-    explicit CVector( std::initializer_list<T> initl )
+    CVector( std::initializer_list<T> initl )
     {
         m_size = initl.size();
         m_capacity = m_size;
@@ -636,6 +666,24 @@ public:
 		m_allocator.destroy( m_data + m_size - 1 );
 		m_size--;
 	}
+
+    // Resizes the container to contain count elements (init by default)
+    void resize( size_type count )
+    {
+        if( count != m_size - 1 )
+        {
+            _resize(count);
+        }
+    }
+
+    // Resizes the container to contain count elements (init by 'value')
+    void resize( size_type count, const value_type& value )
+    {
+        if( count != m_size - 1 )
+        {
+            _resize( count, value );
+        }
+    }
 //=============
 };
 
