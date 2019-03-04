@@ -684,6 +684,25 @@ public:
             _resize( count, value );
         }
     }
+
+    // Exchanges the contents of the container with those of other
+    void swap( CVector& other )
+    {
+        pointer buf_data = m_data;
+        allocator_type buf_allocator = m_allocator;
+        size_type buf_size = m_size;
+        size_type buf_capacity = m_capacity;
+
+        m_data = other.m_data;
+        m_allocator = other.m_allocator;
+        m_size = other.m_size;
+        m_capacity = other.m_capacity;
+
+        other.m_data = buf_data;
+        other.m_allocator = buf_allocator;
+        other.m_size = buf_size;
+        other.m_capacity = buf_capacity;
+    }
 //=============
 };
 
