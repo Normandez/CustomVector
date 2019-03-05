@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <utility>
 #include <initializer_list>
+#include <algorithm>
 
 template<class T>
 class CVector
@@ -703,7 +704,99 @@ public:
         other.m_size = buf_size;
         other.m_capacity = buf_capacity;
     }
+
 //=============
+
+// =============< PUBLIC NON-MEMBERS >=============
+    // Overloaded operators
+    template< class T >
+    friend bool operator==( const CVector<T>& lhs, const CVector<T>& rhs );
+    template< class T >
+    friend bool operator!=( const CVector<T>& lhs, const CVector<T>& rhs );
+    template< class T >
+    friend bool operator<( const CVector<T>& lhs, const CVector<T>& rhs );
+    template< class T >
+    friend bool operator<=( const CVector<T>& lhs, const CVector<T>& rhs );
+    template< class T >
+    friend bool operator>( const CVector<T>& lhs, const CVector<T>& rhs );
+    template< class T >
+    friend bool operator>=( const CVector<T>& lhs, const CVector<T>& rhs );
+// =============
 };
+
+// =============< NON-MEMBERS >=============
+// Checks if the contents of 'lhs' and 'rhs' are equal
+template< class T >
+bool operator==( const CVector<T>& lhs, const CVector<T>& rhs )
+{
+    if( lhs.m_size != rhs.m_size )
+    {
+        return false;
+    }
+    else
+    {
+        for( size_t it = 0; it < lhs.m_size; it++ )
+        {
+            if( lhs.m_data[it] != rhs.m_data[it] )
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+// Checks if the contents of 'lhs' and 'rhs'
+template< class T >
+bool operator!=( const CVector<T>& lhs, const CVector<T>& rhs )
+{
+    return !( operator==( lhs, rhs ) );
+}
+
+// Checks if the contents of 'lhs' lowest than 'rhs'
+template< class T >
+bool operator<( const CVector<T>& lhs, const CVector<T>& rhs )
+{
+    return std::lexicographical_compare( lhs.m_data, lhs.m_data + lhs.m_size,
+                                         rhs.m_data, rhs.m_data + rhs.m_size );
+}
+
+// Checks if the contents of 'lhs' lowest than 'rhs' or equeals
+template< class T >
+bool operator<=( const CVector<T>& lhs, const CVector<T>& rhs )
+{
+    if( lhs == rhs )
+    {
+        return true;
+    }
+    else
+    {
+        return std::lexicographical_compare( lhs.m_data, lhs.m_data + lhs.m_size,
+                                             rhs.m_data, rhs.m_data + rhs.m_size );
+    }
+}
+
+// Checks if the contents of 'lhs' higher than 'rhs'
+template< class T >
+bool operator>( const CVector<T>& lhs, const CVector<T>& rhs )
+{
+    return !( lhs < rhs );
+}
+
+// Checks if the contents of 'lhs' higher than 'rhs' or equeals
+template< class T >
+bool operator>=( const CVector<T>& lhs, const CVector<T>& rhs )
+{
+    if( lhs == rhs )
+    {
+        return true;
+    }
+    else
+    {
+        return !std::lexicographical_compare( lhs.m_data, lhs.m_data + lhs.m_size,
+                                             rhs.m_data, rhs.m_data + rhs.m_size );
+    }
+}
+// =============
 
 #endif //CVECTOR_H
