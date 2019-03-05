@@ -15,9 +15,22 @@ void printVector( const CVector<int>& vec )
 int main( int argc, char* argv[] )
 {
 	CVector<int> v1{1, 2, 3};
-    CVector<int> v2{1, 2, 3};
+    CVector<int> v2{7, 8, 9};
  
-    std::cout << ( v1 <= v2 ) << std::endl;
+    std::cout << "v1: ";
+    printVector(v1);
+ 
+    std::cout << "\nv2: ";
+    printVector(v2);
+ 
+    std::cout << "\n-- SWAP\n";
+    swap( v1, v2 );
+ 
+    std::cout << "v1: ";
+    printVector(v1);
+ 
+    std::cout << "\nv2: ";
+    printVector(v2);
 
     system("pause");
     return 0;

@@ -721,6 +721,10 @@ public:
     friend bool operator>( const CVector<T>& lhs, const CVector<T>& rhs );
     template< class T >
     friend bool operator>=( const CVector<T>& lhs, const CVector<T>& rhs );
+
+    // Non-member swap
+    template< class T >
+    friend void swap( CVector<T>& lhs, CVector<T>& rhs );
 // =============
 };
 
@@ -796,6 +800,13 @@ bool operator>=( const CVector<T>& lhs, const CVector<T>& rhs )
         return !std::lexicographical_compare( lhs.m_data, lhs.m_data + lhs.m_size,
                                              rhs.m_data, rhs.m_data + rhs.m_size );
     }
+}
+
+// Swaping vectors (via 'swap()' method)
+template< class T >
+void swap( CVector<T>& lhs, CVector<T>& rhs )
+{
+    lhs.swap(rhs);
 }
 // =============
 
