@@ -18,7 +18,7 @@ public:
     using pointer = value_type*;
     using const_pointer = const value_type*;
 
-    using allocator_type = std::allocator <value_type>;
+    using allocator_type = std::allocator<value_type>;
 
 private:
     pointer m_data = nullptr;
@@ -26,19 +26,52 @@ private:
     size_type m_size = 0;
     size_type m_capacity = 0;
 
-//=============< Memory managment >=============
+// =============< Memory managment >=============
     // Alloc underlying data
-    void _alloc()
+    void _alloc( bool _construct )
     {
         if(!m_data)
         {
-            if( m_capacity == 0 ) m_capacity++;
+            if(_construct) __construct();
             m_data = m_allocator.allocate(m_capacity);
         }
     }
 
     // Unalloc underlying data
-    void _unalloc()
+    void _unalloc( bool _destroy )
+    {
+        if(m_data)
+        {
+            if(_destroy) __destroy();
+            m_allocator.deallocate( m_data, m_capacity );
+            m_data = nullptr;
+        }
+    }
+
+    // Capacity change reallocation (call after 'm_capacity' changed)
+    void _realloc( size_type _new_cap )
+    {
+        size_type old_cap = m_capacity;
+        m_capacity = _new_cap;
+        if( m_capacity == 0 ) m_capacity = 1;
+
+        pointer buf_data = m_data;
+        m_data = nullptr;
+        _alloc(true);
+
+        for( size_type it = 0; it < m_size; it++ )
+        {
+            m_data[it] = buf_data[it];
+            m_allocator.destroy( buf_data + it );
+        }
+        if(buf_data)
+        {
+            m_allocator.deallocate( buf_data, old_cap );
+        }
+    }
+
+    // Destroy all constructed underlying values
+    void __destroy()
     {
         if(m_data)
         {
@@ -46,37 +79,27 @@ private:
             {
                 m_allocator.destroy( m_data + it );
             }
-            m_allocator.deallocate( m_data, m_capacity );
-            m_data = nullptr;
         }
     }
 
-    // Capacity change reallocation
-    void _realloc( size_type _old_cap )
+    // Default construct underlying values
+    void __construct()
     {
-        pointer buf_data = m_data;
-        m_data = nullptr;
-        _alloc();
-
-        for( size_type it = 0; it < m_size; it++ )
+        if(m_data)
         {
-            m_allocator.construct( m_data + it );
-            m_data[it] = buf_data[it];
-            m_allocator.destroy( buf_data + it );
-        }
-
-        if(buf_data)
-        {
-            m_allocator.deallocate( buf_data, _old_cap );
+            for( size_type it = 0; it < m_size; it++ )
+            {
+                m_allocator.construct( m_data + it );
+            }
         }
     }
-//=============
+// =============
 
 //=============< Utils >=============
-    // Internal cleanupper (use only when internal data not empty and valid)
+    // Internal cleanupper
     void _clear()
     {
-        _unalloc();
+        _unalloc(true);
         m_size = 0;
         m_capacity = 0;
     }
@@ -84,13 +107,14 @@ private:
     // Internal copy 'other' logic
     void _copy_other( const CVector& _other )
     {
+        _clear();
+
         m_size = _other.m_size;
         m_capacity = _other.m_capacity;
-        _unalloc();
-        _alloc();
+        _alloc(true);
+
         for( size_type it = 0; it < m_size; it++ )
         {
-            m_allocator.construct( m_data + it );
             m_data[it] = _other.m_data[it];
         }
     }
@@ -98,7 +122,8 @@ private:
     // Internal move 'other' logic
     void _move_other( const CVector& _other )
     {
-    	_unalloc();
+        _clear();
+
     	m_size = _other.m_size;
     	m_capacity = _other.m_capacity;
     	m_data = _other.m_data;
