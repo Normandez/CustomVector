@@ -27,6 +27,7 @@ private:
     size_type m_capacity = 0;
 
 // =============< Memory managment >=============
+
     // Alloc underlying data
     void _alloc( bool _construct )
     {
@@ -93,9 +94,11 @@ private:
             }
         }
     }
+
 // =============
 
 //=============< Utils >=============
+
     // Internal cleanupper
     void _clear()
     {
@@ -130,15 +133,15 @@ private:
     }
 
     // Internal assigner (use only after cleanup)
-    void _assign( size_type _count, const_reference _value = value_type() )
+    void _assign( size_type _count, const_reference _value = value_type )
     {
+        _clear();
+
         m_size = _count;
         m_capacity = m_size;
-        _unalloc();
-        _alloc();
+        _alloc(true);
         for( size_type it = 0; it < m_size; it++ )
         {
-            m_allocator.construct( m_data + it );
             m_data[it] = _value;
         }
     }
@@ -159,8 +162,10 @@ private:
             m_allocator.construct( r_buf + it );
             r_buf[it] = m_data[_pos + it];
         }
+
         m_data[_pos] = _value;
         m_size++;
+
         for ( size_type it = _pos + 1; it < m_size; it++ ) m_data[it] = r_buf[it - _pos - 1];
         for( size_type it = 0; it < r_buf_length; it++ ) m_allocator.destroy( r_buf + it );
         m_allocator.deallocate( r_buf, r_buf_length );
@@ -175,9 +180,11 @@ private:
             m_allocator.construct( data_buf + it );
             data_buf[it] = m_data[it];
         }
-        m_allocator.construct( m_data + m_size );
-		m_data[m_size] = _value;
+
+        m_allocator.construct( ( m_data + m_size ) );
+		m_data[0] = _value;
         m_size++;
+
         for ( size_type it = 1; it < m_size; it++ )
         {
             m_data[it] = data_buf[it-1];
@@ -194,20 +201,18 @@ private:
         m_size++;
     }
 
-    // Internal remover at defined position
+    // Internal remover at specified position
     void _remove_at( size_type _pos )
     {
-        m_allocator.destroy( m_data + _pos );
+        m_allocator.destroy( ( m_data + _pos ) );
 
         if( _pos == m_size ) return;   // Last element case
 
         pointer data_buf = m_data;
         m_data = nullptr;
-        _alloc();
+        _alloc(true);
         for( size_type it = 0; it < m_size; it++ )
         {
-            m_allocator.construct( m_data + it );
-
             if( it >= _pos )
             {
                 m_data[it] = data_buf[it+1];
@@ -225,14 +230,13 @@ private:
     // Internal in range remover [_first; _last)
     void _remove_in_range( size_type _first, size_type _last )
     {
-        for( size_type it = _first; it < _last; it++ ) m_allocator.destroy( m_data + it );
+        for( size_type it = _first; it < _last; it++ ) m_allocator.destroy( ( m_data + it ) );
         
         pointer buf_data = m_data;
         m_data = nullptr;
-        _alloc();
+        _alloc(true);
         for( size_type it = 0; it < m_size; it++ )
         {
-            m_allocator.construct( m_data + it );
             if( it >= _first )
             {
                 m_data[it] = buf_data[it + ( _last - _first )];
@@ -248,7 +252,7 @@ private:
     }
 
     // Internal resizer
-    void _resize( size_type _count, const_reference _value = value_type() )
+    void _resize( size_type _count, const_reference _value = value_type )
     {
         if( _count < m_size )
         {
@@ -263,9 +267,7 @@ private:
         {
             if( _count > m_capacity )
             {
-                size_type old_cap = m_capacity;
-                m_capacity *= 2;
-                _realloc(old_cap);
+                _realloc( m_capacity * 2 );
             }
 
             for( size_type it = m_size; it <= _count; it++ )
@@ -276,10 +278,12 @@ private:
         }
         m_size = _count;
     }
+
 //=============
 
 public:
 //=============< Initializers >=============
+
     // Construct empty vector
     explicit CVector() noexcept
     {
@@ -289,7 +293,7 @@ public:
     }
 
     // Constuct vector filled with 'count' of 'value'
-    explicit CVector( size_type count, const T& value = T() )
+    explicit CVector( size_type count, const T& value = T )
     {
         _assign( count, value );
     }
@@ -301,32 +305,29 @@ public:
     }
 
     // Copy constructor
-    explicit CVector( const CVector& other )
+    CVector( const CVector& other )
     {
         _copy_other(other);
     }
 
     // Move constructor
-    explicit CVector( CVector&& other )
+    CVector( CVector&& other )
     {
-    	_move_other( static_cast<const CVector&> (other) );
-
-        other.m_size = 0;
-        other.m_capacity = 0;
-        other.m_data = nullptr;
+    	_move_other(other);
+        other._clear();
     }
 
     // Initializer constructor
     CVector( std::initializer_list<T> initl )
     {
+        _clear();
         m_size = initl.size();
         m_capacity = m_size;
-        _unalloc();
-        _alloc();
+        _alloc(true);
+
         size_type i = 0;
         for( auto it = initl.begin(); it != initl.end(); it++, i++ )
         {
-            m_allocator.construct( m_data + i );
             m_data[i] = *it;
         }
     }
@@ -346,21 +347,19 @@ public:
     void operator=( CVector&& other )
     {
         _move_other( static_cast<const CVector&> (other) );
-
-        other.m_size = 0;
-        other.m_capacity = 0;
-        other.m_data = nullptr;
+        other._clear();
     }
 
     // Custom vector assignment
     void assign( size_type size, const T& value )
     {
-        _clear();
         _assign( size, value );
     }
+
 //=============
 
 //=============< Element access >=============
+
     // Get value by reference via method
     reference at( size_type pos )
     {
@@ -428,13 +427,15 @@ public:
     {
         return m_data;
     }
+
 //=============
 
 //=============< Capacity >=============
+
     // Check is vector empty
     bool empty() const noexcept
     {
-        return (bool) m_size;
+        return static_cast<bool> (m_size);
     }
 
     // Get size of vector
@@ -454,9 +455,7 @@ public:
     {
         if( new_cap <= m_size ) return;
         if( new_cap > max_size() ) throw std::length_error("'new_cap' more than max_size()");
-        size_type old_cap = m_capacity;
-        m_capacity = new_cap;
-        _realloc(old_cap);
+        _realloc(new_cap);
     }
 
     // Returns current capacity
@@ -470,16 +469,16 @@ public:
     {
         if( m_capacity > m_size )
         {
-            size_type old_cap = m_capacity;
-            m_capacity = m_size;
-            _realloc(old_cap);
+            _realloc(m_size);
         }
     }
+
 //=============
 
 //=============< Modifiers >=============
+
     // Clear vector (capacity not changed)
-    void clear() noexcept
+    void clear()
     {
         _clear();
     }
@@ -491,18 +490,14 @@ public:
         {
             if( ( m_size + 1 ) > m_capacity )
             {
-                size_type old_cap = m_capacity;
-                m_capacity = m_capacity * 2;
-                _realloc(old_cap);
+                _realloc( m_capacity * 2 );
             }
-
             _insert( pos, value );
         }
         else
         {
             throw std::length_error("'pos' is out of range");
         }
-
         return m_data[pos];
     }
 
@@ -513,19 +508,14 @@ public:
         {
             if( ( m_size + 1 ) > m_capacity )
             {
-                size_type old_cap = m_capacity;
-                m_capacity = m_capacity * 2;
-                _realloc(old_cap);
+                _realloc( m_capacity * 2 );
             }
-
-            const_reference _value = value;
-            _insert( pos, _value );
+            _insert( pos, value );
         }
         else
         {
             throw std::length_error("'pos' is out of range");
         }
-
         return m_data[pos];
     }
 
@@ -536,14 +526,11 @@ public:
         {
             while( ( m_size + count ) > m_capacity )
             {
-                size_type old_cap = m_capacity;
-                m_capacity = m_capacity * 2;
-                _realloc(old_cap);
+                _realloc( m_capacity * 2 );
             }
-
             while( count > 0 )
             {
-                _insert( pos, static_cast<const T& value> (value) );
+                _insert( pos, value );
                 count--;
             }
         }
@@ -551,7 +538,6 @@ public:
         {
             throw std::length_error("'pos' is out of range");
         }
-
         return m_data[pos];
     }
 
@@ -562,11 +548,8 @@ public:
         {
             while( ( m_size + ilist.size() ) > m_capacity )
             {
-                size_type old_cap = m_capacity;
-                m_capacity = m_capacity * 2;
-                _realloc(old_cap);
+                _realloc( m_capacity * 2 );
             }
-
             for( auto it = ilist.end() - 1; it != ilist.begin() - 1; it-- )
             {
                 _insert( pos, *it );
@@ -576,11 +559,10 @@ public:
         {
             throw std::length_error("'pos' is out of range");
         }
-
         return m_data[pos];
     }
 
-    // Inserts element before 'pos' via T() constructor
+    // Inserts element before 'pos' via T(... args) constructor
     template<class... Args>
     reference emplace( size_type pos, Args&&... args )
     {
@@ -588,19 +570,16 @@ public:
         {
             if( ( m_size + 1 ) > m_capacity )
             {
-                size_type old_cap = m_capacity;
-                m_capacity = m_capacity * 2;
-                _realloc(old_cap);
+                _realloc( m_capacity * 2 );
             }
-
-            const_reference _value = T(std::forward<Args&&>(args)...);
-            _insert( pos, _value );
+            pointer _value = m_allocator.allocate(1);
+            m_allocator.construct( _value, std::forward<Args&&>(args)... );
+            _insert( pos, *_value );
         }
         else
         {
             throw std::length_error("'pos' is out of range");
         }
-
         return m_data[pos];
     }
 
@@ -648,9 +627,7 @@ public:
     {
         if( ( m_size + 1 ) > m_capacity )
         {
-            size_type old_cap = m_capacity;
-            m_capacity *= 2;
-            _realloc(old_cap);
+            _realloc( m_capacity * 2 );
         }
         _push_back(value);
     }
@@ -660,13 +637,11 @@ public:
     {
         if( ( m_size + 1 ) > m_capacity )
         {
-            size_type old_cap = m_capacity;
-            m_capacity *= 2;
-            _realloc(old_cap);
+            _realloc( m_capacity * 2 );
         }
         _push_back(value);
 
-        m_allocator.destroy(&value);
+        m_allocator.destroy(value);
     }
 
 	// Inserts element in the end of the container 'pos' via T() constructor
@@ -675,13 +650,11 @@ public:
     {
         if( ( m_size + 1 ) > m_capacity )
         {
-            size_type old_cap = m_capacity;
-            m_capacity = m_capacity * 2;
-            _realloc(old_cap);
+            _realloc( m_capacity * 2 );
         }
-
-        const_reference _value = value_type( std::forward<Args&&>(args)... );
-		_insert( m_size, _value );
+        pointer _value = m_allocator.allocate(1);
+        m_allocator.construct( _value,  std::forward<Args&&>(args)...);
+		_insert( m_size, *_value );
 
         return m_data[m_size];
     }
@@ -696,7 +669,7 @@ public:
     // Resizes the container to contain count elements (init by default)
     void resize( size_type count )
     {
-        if( count != m_size - 1 )
+        if( count != m_size )
         {
             _resize(count);
         }
@@ -705,7 +678,7 @@ public:
     // Resizes the container to contain count elements (init by 'value')
     void resize( size_type count, const value_type& value )
     {
-        if( count != m_size - 1 )
+        if( count != m_size )
         {
             _resize( count, value );
         }
@@ -733,30 +706,33 @@ public:
 //=============
 
 // =============< PUBLIC NON-MEMBERS >=============
+
     // Overloaded operators
     template< class T >
-    friend bool operator==( const CVector<T>& lhs, const CVector<T>& rhs );
+    friend bool operator==( const CVector<T>& lhs, const CVector<T>& rhs ) noexcept;
     template< class T >
-    friend bool operator!=( const CVector<T>& lhs, const CVector<T>& rhs );
+    friend bool operator!=( const CVector<T>& lhs, const CVector<T>& rhs ) noexcept;
     template< class T >
-    friend bool operator<( const CVector<T>& lhs, const CVector<T>& rhs );
+    friend bool operator<( const CVector<T>& lhs, const CVector<T>& rhs ) noexcept;
     template< class T >
-    friend bool operator<=( const CVector<T>& lhs, const CVector<T>& rhs );
+    friend bool operator<=( const CVector<T>& lhs, const CVector<T>& rhs ) noexcept;
     template< class T >
-    friend bool operator>( const CVector<T>& lhs, const CVector<T>& rhs );
+    friend bool operator>( const CVector<T>& lhs, const CVector<T>& rhs ) noexcept;
     template< class T >
-    friend bool operator>=( const CVector<T>& lhs, const CVector<T>& rhs );
+    friend bool operator>=( const CVector<T>& lhs, const CVector<T>& rhs ) noexcept;
 
     // Non-member swap
     template< class T >
     friend void swap( CVector<T>& lhs, CVector<T>& rhs );
+
 // =============
 };
 
 // =============< NON-MEMBERS >=============
+
 // Checks if the contents of 'lhs' and 'rhs' are equal
 template< class T >
-bool operator==( const CVector<T>& lhs, const CVector<T>& rhs )
+bool operator==( const CVector<T>& lhs, const CVector<T>& rhs ) noexcept
 {
     if( lhs.m_size != rhs.m_size )
     {
@@ -777,14 +753,14 @@ bool operator==( const CVector<T>& lhs, const CVector<T>& rhs )
 
 // Checks if the contents of 'lhs' and 'rhs'
 template< class T >
-bool operator!=( const CVector<T>& lhs, const CVector<T>& rhs )
+bool operator!=( const CVector<T>& lhs, const CVector<T>& rhs ) noexcept
 {
     return !( operator==( lhs, rhs ) );
 }
 
 // Checks if the contents of 'lhs' lowest than 'rhs'
 template< class T >
-bool operator<( const CVector<T>& lhs, const CVector<T>& rhs )
+bool operator<( const CVector<T>& lhs, const CVector<T>& rhs ) noexcept
 {
     return std::lexicographical_compare( lhs.m_data, lhs.m_data + lhs.m_size,
                                          rhs.m_data, rhs.m_data + rhs.m_size );
@@ -792,7 +768,7 @@ bool operator<( const CVector<T>& lhs, const CVector<T>& rhs )
 
 // Checks if the contents of 'lhs' lowest than 'rhs' or equeals
 template< class T >
-bool operator<=( const CVector<T>& lhs, const CVector<T>& rhs )
+bool operator<=( const CVector<T>& lhs, const CVector<T>& rhs ) noexcept
 {
     if( lhs == rhs )
     {
@@ -807,14 +783,14 @@ bool operator<=( const CVector<T>& lhs, const CVector<T>& rhs )
 
 // Checks if the contents of 'lhs' higher than 'rhs'
 template< class T >
-bool operator>( const CVector<T>& lhs, const CVector<T>& rhs )
+bool operator>( const CVector<T>& lhs, const CVector<T>& rhs ) noexcept
 {
     return !( lhs < rhs );
 }
 
 // Checks if the contents of 'lhs' higher than 'rhs' or equeals
 template< class T >
-bool operator>=( const CVector<T>& lhs, const CVector<T>& rhs )
+bool operator>=( const CVector<T>& lhs, const CVector<T>& rhs ) noexcept
 {
     if( lhs == rhs )
     {
