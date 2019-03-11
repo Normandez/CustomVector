@@ -1,37 +1,72 @@
 #include <iostream>
-#include <vector>
-#include <string>
+
 #include "CVector.h"
 
-void printVector( const CVector<int>& vec )
+#include <gtest/gtest.h>
+
+// ==============================< STUBS >==============================
+class CInsert
 {
-    for( size_t it = 0; it < vec.size(); it++ )
+public:
+    CInsert()
     {
-        std::cout << vec.at(it) << " ";
+        m_int_data = 2;
     }
-    std::cout << "\nSIZE: " << vec.size() << "\nCAPACITY: " << vec.capacity() << std::endl << std::endl;
+    ~CInsert()
+    {
+        m_int_ptr_data = new int[2];
+        m_int_ptr_data[0] = 2;
+        m_int_ptr_data[1] = 2;
+    }
+
+    const int GetIntData() const
+    {
+        return m_int_data;
+    }
+    const int* GetIntPtrData() const
+    {
+        return m_int_ptr_data;
+    }
+
+private:
+    int m_int_data = 0;
+    int* m_int_ptr_data = nullptr;
+
+};
+// ============================================================
+
+// ==============================< TEST FIXTURE > ==============================
+class CVectorTest
+    : public ::testing::Test
+{
+protected:
+    virtual void SetUp() override
+    {
+        m_int_vec.assign( 2, 2 );
+        m_class_vec.assign( 2, CInsert() );
+    }
+
+    virtual void TearDown() override
+    {
+        m_int_vec.clear();
+        m_class_vec.clear();
+    }
+
+    CVector<int> m_int_vec;
+    CVector<CInsert> m_class_vec;
+};
+// ============================================================
+
+// ==============================< TESTS >==============================
+TEST_F( CVectorTest, Construct )
+{
+    SUCCEED();
 }
+// ============================================================
 
 int main( int argc, char* argv[] )
 {
-	CVector<int> v1{1, 2, 3};
-    CVector<int> v2{7, 8, 9};
- 
-    std::cout << "v1: ";
-    printVector(v1);
- 
-    std::cout << "\nv2: ";
-    printVector(v2);
- 
-    std::cout << "\n-- SWAP\n";
-    swap( v1, v2 );
- 
-    std::cout << "v1: ";
-    printVector(v1);
- 
-    std::cout << "\nv2: ";
-    printVector(v2);
+    testing::InitGoogleTest( &argc, argv );
 
-    system("pause");
-    return 0;
+    return RUN_ALL_TESTS();
 }
