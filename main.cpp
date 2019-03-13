@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "CVector.h"
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -10,6 +11,7 @@ class CInsert
 public:
     CInsert()
     {
+        std::cout << "CInsert() called" << std::endl;
         m_int_data = 0;
         m_int_ptr_data = nullptr;
         m_int_ptr_data_size = 0;
@@ -17,6 +19,7 @@ public:
     }
     CInsert( const CInsert& other )
     {
+        std::cout << "CInsert( const CInsert& other ) called" << std::endl;
         m_int_data = other.m_int_data;
         m_int_ptr_data_size = other.m_int_ptr_data_size;
         m_int_ptr_data = new int [m_int_ptr_data_size];
@@ -28,6 +31,7 @@ public:
     }
     CInsert( CInsert&& other )
     {
+        std::cout << "CInsert( CInsert&& other ) called" << std::endl;
         m_int_data = other.m_int_data;
         m_int_ptr_data_size = other.m_int_ptr_data_size;
         m_int_ptr_data = other.m_int_ptr_data;
@@ -38,31 +42,38 @@ public:
         delete [] other.m_int_ptr_data;
         other.m_std_str_data = "";
     }
-    void operator= ( const CInsert& other )
+    CInsert& operator= ( const CInsert& other )
     {
-        m_int_data = other.m_int_data;
-        m_int_ptr_data_size = other.m_int_ptr_data_size;
-        m_int_ptr_data = new int [m_int_ptr_data_size];
-        for( size_t count = 0; count < m_int_ptr_data_size; count++ )
+        std::cout << "operator=( const CInsert& other ) called" << std::endl;
+        this->m_int_data = other.m_int_data;
+        this->m_int_ptr_data_size = other.m_int_ptr_data_size;
+        this->m_int_ptr_data = new int [this->m_int_ptr_data_size];
+        for( size_t count = 0; count < this->m_int_ptr_data_size; count++ )
         {
-            m_int_ptr_data[count] = other.m_int_ptr_data[count];
+            this->m_int_ptr_data[count] = other.m_int_ptr_data[count];
         }
-        m_std_str_data = other.m_std_str_data;
+        this->m_std_str_data = other.m_std_str_data;
+
+        return *this;
     }
-    void operator= ( CInsert&& other )
+    CInsert& operator= ( CInsert&& other )
     {
-        m_int_data = other.m_int_data;
-        m_int_ptr_data_size = other.m_int_ptr_data_size;
-        m_int_ptr_data = other.m_int_ptr_data;
-        m_std_str_data = other.m_std_str_data;
+        std::cout << "operator=( CInsert&& other ) called" << std::endl;
+        this->m_int_data = other.m_int_data;
+        this->m_int_ptr_data_size = other.m_int_ptr_data_size;
+        this->m_int_ptr_data = other.m_int_ptr_data;
+        this->m_std_str_data = other.m_std_str_data;
 
         other.m_int_data = 0;
         other.m_int_ptr_data_size = 0;
         delete [] other.m_int_ptr_data;
         other.m_std_str_data = "";
+
+        return *this;
     }
     ~CInsert()
     {
+        std::cout << "~CInsert()" << std::endl;
         m_int_data = 0;
         delete [] m_int_ptr_data;
         m_int_ptr_data = nullptr;
@@ -71,7 +82,7 @@ public:
 
     void SetIntData()
     {
-        m_int_data = 0;
+        m_int_data = 10;
     }
 
     void SetIntPtrData()
@@ -115,30 +126,60 @@ private:
 class CVectorTest
     : public ::testing::Test
 {
-protected:
-    virtual void SetUp() override
-    {
-        
-    }
-
-    virtual void TearDown() override
-    {
-        m_int_vec.clear();
-        m_class_vec.clear();
-    }
-
-private:
-    CVector<int> m_int_vec;
-    CVector<CInsert> m_class_vec;
-
 };
 // ============================================================
 
 // ==============================< TESTS >==============================
-TEST_F( CVectorTest, Construct )
+TEST_F( CVectorTest, DefaultConstuct )
 {
-    
-    SUCCEED();
+    CVector<int> int_vec;
+    EXPECT_EQ( int_vec.size(), 0 );
+    EXPECT_EQ( int_vec.capacity(), 0 );
+    EXPECT_EQ( int_vec.data(), nullptr );
+
+    CVector<CInsert> class_vec;
+    EXPECT_EQ( int_vec.size(), 0 );
+    EXPECT_EQ( int_vec.capacity(), 0 );
+    EXPECT_EQ( int_vec.data(), nullptr );
+}
+
+TEST_F( CVectorTest, AssignValueConstruct )
+{
+    CVector<int> int_vec( 10, 10 );
+    EXPECT_EQ( int_vec.size(), 10 );
+    EXPECT_EQ( int_vec.capacity(), 10 );
+    EXPECT_EQ( int_vec.data()[5], 10 );
+
+    CInsert insert_obj;
+    insert_obj.SetIntData();
+    insert_obj.SetIntPtrData();
+    insert_obj.SetStdStrData();
+
+    CVector<CInsert> class_vec( 10, insert_obj );
+    EXPECT_EQ( class_vec.size(), 10 );
+    EXPECT_EQ( class_vec.capacity(), 10 );
+
+    CInsert inserted_obj = class_vec.data()[5];
+    EXPECT_EQ( inserted_obj.GetIntData(), 10 );
+    EXPECT_STREQ( inserted_obj.GetStdStrData().c_str(), "Hello world!" );
+    EXPECT_EQ( inserted_obj.GetIntPtrData()[4], 4 );
+}
+
+TEST_F( CVectorTest, AssignDefaultValueConstruct )
+{
+    CVector<int> int_vec(10);
+    EXPECT_EQ( int_vec.size(), 10 );
+    EXPECT_EQ( int_vec.capacity(), 10 );
+    EXPECT_EQ( int_vec.data()[5], 0 );
+
+    CVector<CInsert> class_vec(10);
+    EXPECT_EQ( class_vec.size(), 10 );
+    EXPECT_EQ( class_vec.capacity(), 10 );
+
+    CInsert inserted_obj = class_vec.data()[5];
+    EXPECT_EQ( inserted_obj.GetIntData(), 0 );
+    EXPECT_STREQ( inserted_obj.GetStdStrData().c_str(), "" );
+    EXPECT_EQ( inserted_obj.GetIntPtrData(), nullptr );
 }
 // ============================================================
 

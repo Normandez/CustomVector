@@ -133,7 +133,7 @@ private:
     }
 
     // Internal assigner (use only after cleanup)
-    void _assign( size_type _count, const_reference _value = value_type )
+    void _assign( size_type _count, const_reference _value = value_type() )
     {
         _clear();
 
@@ -293,7 +293,7 @@ public:
     }
 
     // Constuct vector filled with 'count' of 'value'
-    explicit CVector( size_type count, const T& value = T )
+    explicit CVector( size_type count, const T& value )
     {
         _assign( count, value );
     }
