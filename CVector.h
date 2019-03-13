@@ -33,8 +33,8 @@ private:
     {
         if(!m_data)
         {
-            if(_construct) __construct();
             m_data = m_allocator.allocate(m_capacity);
+            if (_construct) __construct();
         }
     }
 
