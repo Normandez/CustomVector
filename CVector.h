@@ -132,17 +132,33 @@ private:
     	m_data = _other.m_data;
     }
 
-    // Internal assigner (use only after cleanup)
-    void _assign( size_type _count, const_reference _value = value_type() )
+    // Internal assigner by default constructor
+    void _assign( size_type _count )
     {
         _clear();
 
         m_size = _count;
         m_capacity = m_size;
-        _alloc(true);
+        _alloc(false);
         for( size_type it = 0; it < m_size; it++ )
         {
-            m_data[it] = _value;
+            // TODO: We can place allocation here to
+            m_allocator.construct( (m_data + it) );
+        }
+    }
+
+    // Internal assigner by value
+    void _assign( size_type _count, const_reference _value )
+    {
+        _clear();
+
+        m_size = _count;
+        m_capacity = m_size;
+        _alloc(false);
+        for( size_type it = 0; it < m_size; it++ )
+        {
+            // TODO: We can place allocation here to
+            m_allocator.construct( (m_data + it), _value );
         }
     }
 
@@ -641,7 +657,7 @@ public:
         }
         _push_back(value);
 
-        m_allocator.destroy(value);
+        m_allocator.destroy(&value);
     }
 
 	// Inserts element in the end of the container 'pos' via T() constructor

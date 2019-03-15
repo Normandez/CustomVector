@@ -176,10 +176,9 @@ TEST_F( CVectorTest, AssignDefaultValueConstruct )
     EXPECT_EQ( class_vec.size(), 10 );
     EXPECT_EQ( class_vec.capacity(), 10 );
 
-    CInsert inserted_obj = class_vec.data()[5];
-    EXPECT_EQ( inserted_obj.GetIntData(), 0 );
-    EXPECT_STREQ( inserted_obj.GetStdStrData().c_str(), "" );
-    EXPECT_EQ( inserted_obj.GetIntPtrData(), nullptr );
+    EXPECT_EQ( class_vec.data()[5].GetIntData(), 0 );
+    EXPECT_STREQ( class_vec.data()[5].GetStdStrData().c_str(), "" );
+    EXPECT_EQ( class_vec.data()[5].GetIntPtrData(), nullptr );
 }
 // ============================================================
 
@@ -187,5 +186,9 @@ int main( int argc, char* argv[] )
 {
     testing::InitGoogleTest( &argc, argv );
 
+    //CInsert insrt;
+    //CVector<CInsert> vec(2);
+
+    //return 0;
     return RUN_ALL_TESTS();
 }
