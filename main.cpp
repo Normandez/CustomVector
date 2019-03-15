@@ -22,10 +22,17 @@ public:
         std::cout << "CInsert( const CInsert& other ) called" << std::endl;
         m_int_data = other.m_int_data;
         m_int_ptr_data_size = other.m_int_ptr_data_size;
-        m_int_ptr_data = new int [m_int_ptr_data_size];
-        for( size_t count = 0; count < m_int_ptr_data_size; count++ )
+        if( m_int_ptr_data_size != 0 )
         {
-            m_int_ptr_data[count] = other.m_int_ptr_data[count];
+            m_int_ptr_data = new int [m_int_ptr_data_size];
+            for( size_t count = 0; count < m_int_ptr_data_size; count++ )
+            {
+                m_int_ptr_data[count] = other.m_int_ptr_data[count];
+            }
+        }
+        else
+        {
+            m_int_ptr_data = nullptr;
         }
         m_std_str_data = other.m_std_str_data;
     }
@@ -47,10 +54,17 @@ public:
         std::cout << "operator=( const CInsert& other ) called" << std::endl;
         this->m_int_data = other.m_int_data;
         this->m_int_ptr_data_size = other.m_int_ptr_data_size;
-        this->m_int_ptr_data = new int [this->m_int_ptr_data_size];
-        for( size_t count = 0; count < this->m_int_ptr_data_size; count++ )
+        if( this->m_int_ptr_data_size != 0 )
         {
-            this->m_int_ptr_data[count] = other.m_int_ptr_data[count];
+            this->m_int_ptr_data = new int [this->m_int_ptr_data_size];
+            for( size_t count = 0; count < this->m_int_ptr_data_size; count++ )
+            {
+                this->m_int_ptr_data[count] = other.m_int_ptr_data[count];
+            }
+        }
+        else
+        {
+            this->m_int_ptr_data = nullptr;
         }
         this->m_std_str_data = other.m_std_str_data;
 
@@ -180,6 +194,24 @@ TEST_F( CVectorTest, AssignDefaultValueConstruct )
     EXPECT_STREQ( class_vec.data()[5].GetStdStrData().c_str(), "" );
     EXPECT_EQ( class_vec.data()[5].GetIntPtrData(), nullptr );
 }
+
+TEST_F( CVectorTest, CopyConstruct )
+{
+    CVector<int> int_vec1( 10, 10 );
+    CVector<int> int_vec2(int_vec1);
+    EXPECT_EQ( int_vec1.size(), int_vec2.size() );
+    EXPECT_EQ( int_vec1.capacity(), int_vec2.capacity() );
+    EXPECT_EQ( int_vec1.data()[5], int_vec2.data()[5] );
+
+    CVector<CInsert> class_vec1(10);
+    CVector<CInsert> class_vec2(class_vec1);
+    EXPECT_EQ( class_vec1.size(), class_vec2.size() );
+    EXPECT_EQ( class_vec1.capacity(), class_vec2.capacity() );
+
+    EXPECT_EQ( class_vec1.data()[5].GetIntData(), class_vec2.data()[5].GetIntData() );
+    EXPECT_STREQ( class_vec1.data()[5].GetStdStrData().c_str(), class_vec2.data()[5].GetStdStrData().c_str() );
+    EXPECT_EQ( class_vec1.data()[5].GetIntPtrData(), class_vec2.data()[5].GetIntPtrData() );
+}
 // ============================================================
 
 int main( int argc, char* argv[] )
@@ -187,7 +219,8 @@ int main( int argc, char* argv[] )
     testing::InitGoogleTest( &argc, argv );
 
     //CInsert insrt;
-    //CVector<CInsert> vec(2);
+    //CVector<CInsert> vec1(2);
+    //CVector<CInsert> vec2(vec1);
 
     //return 0;
     return RUN_ALL_TESTS();

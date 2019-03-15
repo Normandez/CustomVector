@@ -110,15 +110,16 @@ private:
     // Internal copy 'other' logic
     void _copy_other( const CVector& _other )
     {
+        // TODO: Improve logic of clearing refering to capacity
         _clear();
 
         m_size = _other.m_size;
         m_capacity = _other.m_capacity;
-        _alloc(true);
+        _alloc(false);
 
         for( size_type it = 0; it < m_size; it++ )
         {
-            m_data[it] = _other.m_data[it];
+            m_allocator.construct( ( m_data + it ), _other.m_data[it] );
         }
     }
 
