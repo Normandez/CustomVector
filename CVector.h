@@ -331,7 +331,10 @@ public:
     CVector( CVector&& other )
     {
     	_move_other(other);
-        other._clear();
+
+		other.m_size = 0;
+		other.m_capacity = 0;
+		other.m_data = nullptr;
     }
 
     // Initializer constructor
@@ -363,8 +366,11 @@ public:
     // Move assignment
     void operator=( CVector&& other )
     {
-        _move_other( static_cast<const CVector&> (other) );
-        other._clear();
+        _move_other(other);
+        
+		other.m_size = 0;
+		other.m_capacity = 0;
+		other.m_data = nullptr;
     }
 
     // Custom vector assignment

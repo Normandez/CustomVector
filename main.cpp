@@ -212,6 +212,35 @@ TEST_F( CVectorTest, CopyConstruct )
     EXPECT_STREQ( class_vec1.data()[5].GetStdStrData().c_str(), class_vec2.data()[5].GetStdStrData().c_str() );
     EXPECT_EQ( class_vec1.data()[5].GetIntPtrData(), class_vec2.data()[5].GetIntPtrData() );
 }
+
+TEST_F( CVectorTest, MoveConstruct )
+{
+    CVector<int> int_vec1( 10, 10 );
+    CVector<int> int_vec2( std::move(int_vec1) );
+    EXPECT_NE( int_vec1.size(), int_vec2.size() );
+    EXPECT_NE( int_vec1.capacity(), int_vec2.capacity() );
+	EXPECT_EQ( int_vec2.size(), 10 );
+	EXPECT_EQ( int_vec2.capacity(), 10 );
+	EXPECT_EQ( int_vec2.data()[5], 10 );
+	EXPECT_EQ( int_vec1.size(), 0 );
+	EXPECT_EQ( int_vec1.capacity(), 0 );
+	EXPECT_EQ( int_vec1.data(), nullptr );
+
+    CVector<CInsert> class_vec1(10);
+    CVector<CInsert> class_vec2( std::move(class_vec1) );
+    EXPECT_NE( class_vec1.size(), class_vec2.size() );
+    EXPECT_NE( class_vec1.capacity(), class_vec2.capacity() );
+	EXPECT_EQ( class_vec2.size(), 10 );
+	EXPECT_EQ( class_vec2.capacity(), 10 );
+
+    EXPECT_EQ( class_vec2.data()[5].GetIntData(), 0 );
+    EXPECT_STREQ( class_vec2.data()[5].GetStdStrData().c_str(), "" );
+    EXPECT_EQ( class_vec2.data()[5].GetIntPtrData(), nullptr );
+
+	EXPECT_EQ( class_vec1.size(), 0 );
+	EXPECT_EQ( class_vec1.capacity(), 0 );
+	EXPECT_EQ( class_vec1.data(), nullptr );
+}
 // ============================================================
 
 int main( int argc, char* argv[] )
@@ -220,7 +249,7 @@ int main( int argc, char* argv[] )
 
     //CInsert insrt;
     //CVector<CInsert> vec1(2);
-    //CVector<CInsert> vec2(vec1);
+	//CVector<CInsert> vec2( std::move(vec1) );
 
     //return 0;
     return RUN_ALL_TESTS();
