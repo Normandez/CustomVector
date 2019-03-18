@@ -1,7 +1,8 @@
-TEMPLATE = app
+CONFIG -= qt
 CONFIG += console c++11
 CONFIG -= app_bundle
-CONFIG -= qt
+
+TEMPLATE = app
 
 LIBS += $${PWD}/depends/gtest/lib/googletest.lib
 INCLUDEPATH += $${PWD}/depends/gtest/include
