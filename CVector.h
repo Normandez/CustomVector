@@ -343,12 +343,13 @@ public:
         _clear();
         m_size = initl.size();
         m_capacity = m_size;
-        _alloc(true);
+        _alloc(false);
 
         size_type i = 0;
         for( auto it = initl.begin(); it != initl.end(); it++, i++ )
         {
-            m_data[i] = *it;
+			//// TODO: We can place allocation here to
+			m_allocator.construct( ( m_data + i ), *it );
         }
     }
 

@@ -241,6 +241,23 @@ TEST_F( CVectorTest, MoveConstruct )
 	EXPECT_EQ( class_vec1.capacity(), 0 );
 	EXPECT_EQ( class_vec1.data(), nullptr );
 }
+
+TEST_F( CVectorTest, InitializerListConstruct )
+{
+	CVector<int> int_vec( { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 } );
+    EXPECT_EQ( int_vec.size(), 10 );
+    EXPECT_EQ( int_vec.capacity(), 10 );
+    EXPECT_EQ( int_vec.data()[5], 5 );
+	
+	CInsert insrt;
+	CVector<CInsert> class_vec( { insrt, insrt, insrt, insrt, insrt, insrt, insrt, insrt, insrt, insrt } );
+    EXPECT_EQ( class_vec.size(), 10 );
+    EXPECT_EQ( class_vec.capacity(), 10 );
+
+    EXPECT_EQ( class_vec.data()[5].GetIntData(), 0 );
+    EXPECT_STREQ( class_vec.data()[5].GetStdStrData().c_str(), "" );
+    EXPECT_EQ( class_vec.data()[5].GetIntPtrData(), nullptr );
+}
 // ============================================================
 
 int main( int argc, char* argv[] )
@@ -248,7 +265,7 @@ int main( int argc, char* argv[] )
     testing::InitGoogleTest( &argc, argv );
 
     //CInsert insrt;
-    //CVector<CInsert> vec1(2);
+	//CVector<CInsert> vec1 = { insrt, insrt };
 	//CVector<CInsert> vec2( std::move(vec1) );
 
     //return 0;
