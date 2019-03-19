@@ -459,7 +459,7 @@ public:
     // Check is vector empty
     bool empty() const noexcept
     {
-        return static_cast<bool> (m_size);
+        return ( m_size == 0 );
     }
 
     // Get size of vector

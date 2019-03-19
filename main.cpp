@@ -258,6 +258,240 @@ TEST_F( CVectorTest, InitializerListConstruct )
     EXPECT_STREQ( class_vec.data()[5].GetStdStrData().c_str(), "" );
     EXPECT_EQ( class_vec.data()[5].GetIntPtrData(), nullptr );
 }
+
+TEST_F( CVectorTest, CopyAssignment )
+{
+    CVector<int> int_vec1( 10, 10 );
+    CVector<int> int_vec2 = int_vec1;
+    EXPECT_EQ( int_vec1.size(), int_vec2.size() );
+    EXPECT_EQ( int_vec1.capacity(), int_vec2.capacity() );
+    EXPECT_EQ( int_vec1.data()[5], int_vec2.data()[5] );
+
+    CVector<CInsert> class_vec1(10);
+    CVector<CInsert> class_vec2 = class_vec1;
+    EXPECT_EQ( class_vec1.size(), class_vec2.size() );
+    EXPECT_EQ( class_vec1.capacity(), class_vec2.capacity() );
+
+    EXPECT_EQ( class_vec1.data()[5].GetIntData(), class_vec2.data()[5].GetIntData() );
+    EXPECT_STREQ( class_vec1.data()[5].GetStdStrData().c_str(), class_vec2.data()[5].GetStdStrData().c_str() );
+    EXPECT_EQ( class_vec1.data()[5].GetIntPtrData(), class_vec2.data()[5].GetIntPtrData() );
+}
+
+TEST_F( CVectorTest, MoveAssignment )
+{
+    CVector<int> int_vec1( 10, 10 );
+    CVector<int> int_vec2 = std::move(int_vec1);
+    EXPECT_NE( int_vec1.size(), int_vec2.size() );
+    EXPECT_NE( int_vec1.capacity(), int_vec2.capacity() );
+	EXPECT_EQ( int_vec2.size(), 10 );
+	EXPECT_EQ( int_vec2.capacity(), 10 );
+	EXPECT_EQ( int_vec2.data()[5], 10 );
+	EXPECT_EQ( int_vec1.size(), 0 );
+	EXPECT_EQ( int_vec1.capacity(), 0 );
+	EXPECT_EQ( int_vec1.data(), nullptr );
+
+    CVector<CInsert> class_vec1(10);
+    CVector<CInsert> class_vec2 = std::move(class_vec1);
+    EXPECT_NE( class_vec1.size(), class_vec2.size() );
+    EXPECT_NE( class_vec1.capacity(), class_vec2.capacity() );
+	EXPECT_EQ( class_vec2.size(), 10 );
+	EXPECT_EQ( class_vec2.capacity(), 10 );
+
+    EXPECT_EQ( class_vec2.data()[5].GetIntData(), 0 );
+    EXPECT_STREQ( class_vec2.data()[5].GetStdStrData().c_str(), "" );
+    EXPECT_EQ( class_vec2.data()[5].GetIntPtrData(), nullptr );
+
+	EXPECT_EQ( class_vec1.size(), 0 );
+	EXPECT_EQ( class_vec1.capacity(), 0 );
+	EXPECT_EQ( class_vec1.data(), nullptr );
+}
+
+TEST_F( CVectorTest, Assign )
+{
+    CVector<int> int_vec;
+    int_vec.assign( 10, 10 );
+    EXPECT_EQ( int_vec.size(), 10 );
+    EXPECT_EQ( int_vec.capacity(), 10 );
+    EXPECT_EQ( int_vec.data()[5], 10 );
+
+    CInsert insert_obj;
+    insert_obj.SetIntData();
+    insert_obj.SetIntPtrData();
+    insert_obj.SetStdStrData();
+
+    CVector<CInsert> class_vec;
+    class_vec.assign( 10, insert_obj );
+    EXPECT_EQ( class_vec.size(), 10 );
+    EXPECT_EQ( class_vec.capacity(), 10 );
+
+    CInsert inserted_obj = class_vec.data()[5];
+    EXPECT_EQ( inserted_obj.GetIntData(), 10 );
+    EXPECT_STREQ( inserted_obj.GetStdStrData().c_str(), "Hello world!" );
+    EXPECT_EQ( inserted_obj.GetIntPtrData()[4], 4 );
+}
+
+TEST_F( CVectorTest, AtMethod )
+{
+    CVector<int> int_vec( 5, 5 );
+    const int int_val = int_vec.at(2);
+    EXPECT_EQ( int_val, 5 );
+    EXPECT_EQ( int_vec.size(), 5 );
+    EXPECT_EQ( int_vec.capacity(), 5 );
+
+    CVector<CInsert> class_vec( 5, CInsert() );
+    const CInsert insert_val = class_vec.at(2);
+    EXPECT_EQ( insert_val.GetIntData(), 0 );
+    EXPECT_STREQ( insert_val.GetStdStrData().c_str(), "" );
+    EXPECT_EQ( insert_val.GetIntPtrData(), nullptr );
+    EXPECT_EQ( class_vec.size(), 5 );
+    EXPECT_EQ( class_vec.capacity(), 5 );
+}
+
+TEST_F( CVectorTest, IndexOperator )
+{
+    CVector<int> int_vec( 5, 5 );
+    const int int_val = int_vec[2];
+    EXPECT_EQ( int_val, 5 );
+    EXPECT_EQ( int_vec.size(), 5 );
+    EXPECT_EQ( int_vec.capacity(), 5 );
+
+    CVector<CInsert> class_vec( 5, CInsert() );
+    const CInsert insert_val = class_vec[2];
+    EXPECT_EQ( insert_val.GetIntData(), 0 );
+    EXPECT_STREQ( insert_val.GetStdStrData().c_str(), "" );
+    EXPECT_EQ( insert_val.GetIntPtrData(), nullptr );
+    EXPECT_EQ( class_vec.size(), 5 );
+    EXPECT_EQ( class_vec.capacity(), 5 );
+}
+
+TEST_F( CVectorTest, FrontMethod )
+{
+    CVector<int> int_vec( 5, 5 );
+    const int int_val = int_vec.front();
+    EXPECT_EQ( int_val, 5 );
+    EXPECT_EQ( int_vec.size(), 5 );
+    EXPECT_EQ( int_vec.capacity(), 5 );
+
+    CVector<CInsert> class_vec( 5, CInsert() );
+    const CInsert insert_val = class_vec.front();
+    EXPECT_EQ( insert_val.GetIntData(), 0 );
+    EXPECT_STREQ( insert_val.GetStdStrData().c_str(), "" );
+    EXPECT_EQ( insert_val.GetIntPtrData(), nullptr );
+    EXPECT_EQ( class_vec.size(), 5 );
+    EXPECT_EQ( class_vec.capacity(), 5 );
+}
+
+TEST_F( CVectorTest, BackMethod )
+{
+    CVector<int> int_vec( 5, 5 );
+    const int int_val = int_vec.back();
+    EXPECT_EQ( int_val, 5 );
+    EXPECT_EQ( int_vec.size(), 5 );
+    EXPECT_EQ( int_vec.capacity(), 5 );
+
+    CVector<CInsert> class_vec( 5, CInsert() );
+    const CInsert insert_val = class_vec.back();
+    EXPECT_EQ( insert_val.GetIntData(), 0 );
+    EXPECT_STREQ( insert_val.GetStdStrData().c_str(), "" );
+    EXPECT_EQ( insert_val.GetIntPtrData(), nullptr );
+    EXPECT_EQ( class_vec.size(), 5 );
+    EXPECT_EQ( class_vec.capacity(), 5 );
+}
+
+TEST_F( CVectorTest, DataMethod )
+{
+    CVector<int> int_vec( 5, 5 );
+    int* int_ptr = int_vec.data();
+    ASSERT_NE( int_ptr, nullptr );
+    EXPECT_EQ( int_ptr[2], 5 );
+    EXPECT_EQ( int_vec.size(), 5 );
+    EXPECT_EQ( int_vec.capacity(), 5 );
+
+    CVector<CInsert> class_vec( 5, CInsert() );
+    CInsert* insert_ptr = class_vec.data();
+    ASSERT_NE( insert_ptr, nullptr );
+    EXPECT_EQ( insert_ptr[2].GetIntData(), 0 );
+    EXPECT_STREQ( insert_ptr[2].GetStdStrData().c_str(), "" );
+    EXPECT_EQ( insert_ptr[2].GetIntPtrData(), nullptr );
+    EXPECT_EQ( class_vec.size(), 5 );
+    EXPECT_EQ( class_vec.capacity(), 5 );
+}
+
+TEST_F( CVectorTest, EmptyMethod )
+{
+    CVector<int> int_vec;
+    EXPECT_TRUE( int_vec.empty() );
+    int_vec.assign( 2, 2 );
+    EXPECT_FALSE( int_vec.empty() );
+
+    CVector<CInsert> class_vec;
+    EXPECT_TRUE( class_vec.empty() );
+    class_vec.assign( 2, CInsert() );
+    EXPECT_FALSE( class_vec.empty() );
+}
+
+TEST_F( CVectorTest, SizeAndCapacityMethods )
+{
+    CVector<int> int_vec;
+    EXPECT_EQ( int_vec.size(), 0 );
+    EXPECT_EQ( int_vec.capacity(), 0 );
+    int_vec.push_back(5);
+    EXPECT_EQ( int_vec.size(), 1 );
+    EXPECT_EQ( int_vec.capacity(), 1 );
+
+    CVector<CInsert> class_vec;
+    EXPECT_EQ( class_vec.size(), 0 );
+    EXPECT_EQ( class_vec.capacity(), 0 );
+    class_vec.push_back( CInsert() );
+    EXPECT_EQ( class_vec.size(), 1 );
+    EXPECT_EQ( class_vec.capacity(), 1 );
+}
+
+TEST_F( CVectorTest, MaxSizeMethod )
+{
+    CVector<int> int_vec;
+    EXPECT_EQ( int_vec.max_size(), std::numeric_limits<size_t>::max() );
+}
+
+TEST_F( CVectorTest, ReserveMethod )
+{
+    CVector<int> int_vec;
+    int_vec.reserve(0);
+    EXPECT_EQ( int_vec.size(), 0 );
+    EXPECT_EQ( int_vec.capacity(), 0 );
+    int_vec.assign( 2, 2 );
+    int_vec.reserve(5);
+    EXPECT_EQ( int_vec.size(), 2 );
+    EXPECT_EQ( int_vec.capacity(), 5 );
+    EXPECT_EQ( int_vec.data()[0], 2 );
+
+    CVector<CInsert> class_vec;
+    class_vec.reserve(0);
+    EXPECT_EQ( class_vec.size(), 0 );
+    EXPECT_EQ( class_vec.capacity(), 0 );
+    class_vec.assign( 2, CInsert() );
+    class_vec.reserve(5);
+    EXPECT_EQ( class_vec.size(), 2 );
+    EXPECT_EQ( class_vec.capacity(), 5 );
+    EXPECT_EQ( class_vec.data()[0].GetIntData(), 0 );
+}
+
+TEST_F( CVectorTest, ShrinkToFitMethod )
+{
+    CVector<int> int_vec( 5, 5 );
+    int_vec.push_back(5);
+    EXPECT_NE( int_vec.capacity(), 6 );
+    int_vec.shrink_to_fit();
+    EXPECT_EQ( int_vec.capacity(), 6 );
+    EXPECT_EQ( int_vec.capacity(), int_vec.size() );
+
+    CVector<CInsert> class_vec( 5, CInsert() );
+    class_vec.push_back( CInsert() );
+    EXPECT_NE( class_vec.capacity(), 6 );
+    class_vec.shrink_to_fit();
+    EXPECT_EQ( class_vec.capacity(), 6 );
+    EXPECT_EQ( class_vec.capacity(), class_vec.size() );
+}
 // ============================================================
 
 int main( int argc, char* argv[] )
@@ -265,8 +499,9 @@ int main( int argc, char* argv[] )
     testing::InitGoogleTest( &argc, argv );
 
     //CInsert insrt;
-	//CVector<CInsert> vec1 = { insrt, insrt };
-	//CVector<CInsert> vec2( std::move(vec1) );
+	//CVector<CInsert> vec1;
+    //vec1.assign( 2, insrt );
+    //std::vector<CInsert> vec2 = std::move(vec1);
 
     //return 0;
     return RUN_ALL_TESTS();
