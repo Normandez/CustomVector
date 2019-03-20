@@ -58,11 +58,11 @@ private:
 
         pointer buf_data = m_data;
         m_data = nullptr;
-        _alloc(true);
+        _alloc(false);
 
         for( size_type it = 0; it < m_size; it++ )
         {
-            m_data[it] = buf_data[it];
+            m_allocator.construct( ( m_data + it ), buf_data[it] );
             m_allocator.destroy( buf_data + it );
         }
         if(buf_data)
@@ -176,14 +176,13 @@ private:
         pointer r_buf = m_allocator.allocate(r_buf_length);
         for( size_type it = 0; it < r_buf_length; it++ )
         {
-            m_allocator.construct( r_buf + it );
-            r_buf[it] = m_data[_pos + it];
+            m_allocator.construct( ( r_buf + it ), m_data[_pos + it] );
         }
 
-        m_data[_pos] = _value;
+        m_allocator.construct( ( m_data + _pos ), _value );
         m_size++;
 
-        for ( size_type it = _pos + 1; it < m_size; it++ ) m_data[it] = r_buf[it - _pos - 1];
+        for ( size_type it = _pos + 1; it < m_size; it++ ) m_allocator.construct( ( m_data + it ), r_buf[it - _pos - 1] );
         for( size_type it = 0; it < r_buf_length; it++ ) m_allocator.destroy( r_buf + it );
         m_allocator.deallocate( r_buf, r_buf_length );
     }

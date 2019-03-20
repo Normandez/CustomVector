@@ -492,6 +492,82 @@ TEST_F( CVectorTest, ShrinkToFitMethod )
     EXPECT_EQ( class_vec.capacity(), 6 );
     EXPECT_EQ( class_vec.capacity(), class_vec.size() );
 }
+
+TEST_F( CVectorTest, ClearMethod )
+{
+    CVector<int> int_vec( 5, 5 );
+    EXPECT_EQ( int_vec.size(), 5 );
+    EXPECT_EQ( int_vec.capacity(), 5 );
+    EXPECT_NE( int_vec.data(), nullptr );
+    int_vec.clear();
+    EXPECT_EQ( int_vec.size(), 0 );
+    EXPECT_EQ( int_vec.capacity(), 0 );
+    EXPECT_EQ( int_vec.data(), nullptr );
+
+    CVector<CInsert> class_vec( 5, CInsert() );
+    EXPECT_EQ( class_vec.size(), 5 );
+    EXPECT_EQ( class_vec.capacity(), 5 );
+    EXPECT_NE( class_vec.data(), nullptr );
+    class_vec.clear();
+    EXPECT_EQ( class_vec.size(), 0 );
+    EXPECT_EQ( class_vec.capacity(), 0 );
+    EXPECT_EQ( class_vec.data(), nullptr );
+}
+
+TEST_F( CVectorTest, InsertMethods )
+{
+    CVector<int> int_vec( 5, 5 );
+    EXPECT_EQ( int_vec.size(), 5 );
+    EXPECT_EQ( int_vec.capacity(), 5 );
+    EXPECT_EQ( int_vec.data()[2], 5 );
+    int inserted_val = int_vec.insert( 2, 10 );
+    EXPECT_EQ( int_vec.size(), 6 );
+    EXPECT_EQ( int_vec.capacity(), 10 );
+    EXPECT_EQ( inserted_val, 10 );
+    EXPECT_EQ( int_vec.data()[2], inserted_val );
+    inserted_val = int_vec.insert( 0, 2, 10 );
+    EXPECT_EQ( int_vec.size(), 8 );
+    EXPECT_EQ( int_vec.capacity(), 10 );
+    EXPECT_EQ( inserted_val, 10 );
+    EXPECT_EQ( int_vec.data()[0], inserted_val );
+    EXPECT_EQ( int_vec.data()[1], inserted_val );
+    EXPECT_EQ( int_vec.data()[3], 5 );
+    inserted_val = int_vec.insert( 7, {1, 2, 3} );
+    EXPECT_EQ( int_vec.size(), 11 );
+    EXPECT_EQ( int_vec.capacity(), 20 );
+    EXPECT_EQ( inserted_val, 1 );
+    EXPECT_EQ( int_vec.data()[7], 1 );
+    EXPECT_EQ( int_vec.data()[8], 2 );
+    EXPECT_EQ( int_vec.data()[9], 3 );
+    EXPECT_EQ( int_vec.data()[10], 5 );
+
+    CVector<CInsert> class_vec( 5, CInsert() );
+    EXPECT_EQ( class_vec.size(), 5 );
+    EXPECT_EQ( class_vec.capacity(), 5 );
+    EXPECT_EQ( class_vec.data()[2].GetIntData(), 0 );
+    CInsert insrt;
+    insrt.SetIntData();
+    CInsert inserted_val = class_vec.insert( 2, insrt );
+    EXPECT_EQ( int_vec.size(), 6 );
+    EXPECT_EQ( int_vec.capacity(), 10 );
+    EXPECT_EQ( inserted_val, 10 );
+    EXPECT_EQ( int_vec.data()[2], inserted_val );
+    inserted_val = int_vec.insert( 0, 2, 10 );
+    EXPECT_EQ( int_vec.size(), 8 );
+    EXPECT_EQ( int_vec.capacity(), 10 );
+    EXPECT_EQ( inserted_val, 10 );
+    EXPECT_EQ( int_vec.data()[0], inserted_val );
+    EXPECT_EQ( int_vec.data()[1], inserted_val );
+    EXPECT_EQ( int_vec.data()[3], 5 );
+    inserted_val = int_vec.insert( 7, {1, 2, 3} );
+    EXPECT_EQ( int_vec.size(), 11 );
+    EXPECT_EQ( int_vec.capacity(), 20 );
+    EXPECT_EQ( inserted_val, 1 );
+    EXPECT_EQ( int_vec.data()[7], 1 );
+    EXPECT_EQ( int_vec.data()[8], 2 );
+    EXPECT_EQ( int_vec.data()[9], 3 );
+    EXPECT_EQ( int_vec.data()[10], 5 );
+}
 // ============================================================
 
 int main( int argc, char* argv[] )
@@ -499,7 +575,8 @@ int main( int argc, char* argv[] )
     testing::InitGoogleTest( &argc, argv );
 
     //CInsert insrt;
-	//CVector<CInsert> vec1;
+	std::vector<CInsert> vec1( 2, CInsert() );
+    //vec1.clear();
     //vec1.assign( 2, insrt );
     //std::vector<CInsert> vec2 = std::move(vec1);
 
