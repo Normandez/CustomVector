@@ -17,6 +17,11 @@ public:
         m_int_ptr_data_size = 0;
         m_std_str_data = "";
     }
+	CInsert( int int_data )
+	{
+		std::cout << "CInsert( int int_data ) called" << std::endl;
+		m_int_data = int_data;
+	}
     CInsert( const CInsert& other )
     {
         std::cout << "CInsert( const CInsert& other ) called" << std::endl;
@@ -586,7 +591,11 @@ TEST_F( CVectorTest, EmplaceMethod )
     EXPECT_EQ( class_vec.size(), 5 );
     EXPECT_EQ( class_vec.capacity(), 5 );
     EXPECT_EQ( class_vec.data()[2].GetIntData(), 0 );
-    
+	CInsert emplaced_class_val = class_vec.emplace( 2, 13 );
+	EXPECT_EQ( emplaced_class_val.GetIntData(), 13 );
+	EXPECT_EQ( class_vec.size(), 6 );
+    EXPECT_EQ( class_vec.capacity(), 10 );
+	EXPECT_EQ( class_vec.data()[2].GetIntData(), emplaced_class_val.GetIntData() );
 }
 // ============================================================
 
