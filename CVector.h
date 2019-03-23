@@ -59,39 +59,29 @@ private:
         pointer buf_data = m_data;
         m_data = nullptr;
         _alloc(false);
-
-        for( size_type it = 0; it < m_size; it++ )
-        {
-            m_allocator.construct( ( m_data + it ), buf_data[it] );
-            m_allocator.destroy( buf_data + it );
-        }
-        if(buf_data)
-        {
-            m_allocator.deallocate( buf_data, old_cap );
-        }
+		for( size_type it = 0; it < m_size; it++ )
+		{
+			m_allocator.construct( ( m_data + it ), buf_data[it] );
+			m_allocator.destroy( ( buf_data + it ) );
+		}
+		m_allocator.deallocate( buf_data, old_cap );
     }
 
     // Destroy all constructed underlying values
     void __destroy()
     {
-        if(m_data)
+        for( size_t it = 0 ; it < m_size; it++ )
         {
-            for( size_t it = 0 ; it < m_size; it++ )
-            {
-                m_allocator.destroy( m_data + it );
-            }
+            m_allocator.destroy( m_data + it );
         }
     }
 
     // Default construct underlying values
     void __construct()
     {
-        if(m_data)
+        for( size_type it = 0; it < m_size; it++ )
         {
-            for( size_type it = 0; it < m_size; it++ )
-            {
-                m_allocator.construct( m_data + it );
-            }
+            m_allocator.construct( m_data + it );
         }
     }
 
@@ -110,13 +100,14 @@ private:
     // Internal copy 'other' logic
     void _copy_other( const CVector& _other )
     {
-        // TODO: Improve logic of clearing refering to capacity
-        _clear();
+		if( m_capacity != 0 )
+		{
+			_clear();
+		}
 
         m_size = _other.m_size;
         m_capacity = _other.m_capacity;
         _alloc(false);
-
         for( size_type it = 0; it < m_size; it++ )
         {
             m_allocator.construct( ( m_data + it ), _other.m_data[it] );
@@ -126,7 +117,10 @@ private:
     // Internal move 'other' logic
     void _move_other( const CVector& _other )
     {
-        _clear();
+        if( m_capacity != 0 )
+		{
+			_clear();
+		}
 
     	m_size = _other.m_size;
     	m_capacity = _other.m_capacity;
@@ -136,29 +130,33 @@ private:
     // Internal assigner by default constructor
     void _assign( size_type _count )
     {
-        _clear();
+        if( m_capacity != 0 )
+		{
+			_clear();
+		}
 
         m_size = _count;
         m_capacity = m_size;
         _alloc(false);
         for( size_type it = 0; it < m_size; it++ )
         {
-            // TODO: We can place allocation here to
-            m_allocator.construct( (m_data + it) );
+            m_allocator.construct( ( m_data + it ) );
         }
     }
 
     // Internal assigner by value
     void _assign( size_type _count, const_reference _value )
     {
-        _clear();
+        if( m_capacity != 0 )
+		{
+			_clear();
+		}
 
         m_size = _count;
         m_capacity = m_size;
         _alloc(false);
         for( size_type it = 0; it < m_size; it++ )
         {
-            // TODO: We can place allocation here to
             m_allocator.construct( (m_data + it), _value );
         }
     }
@@ -172,48 +170,97 @@ private:
             return;
         }
 
-        size_type r_buf_length = m_size - _pos;
-        pointer r_buf = m_allocator.allocate(r_buf_length);
-        for( size_type it = 0; it < r_buf_length; it++ )
-        {
-            m_allocator.construct( ( r_buf + it ), m_data[_pos + it] );
-        }
-
-        m_allocator.construct( ( m_data + _pos ), _value );
+		size_type data_buf_length = m_size - _pos;
+		pointer data_buf = m_allocator.allocate(data_buf_length);
+		for( size_type it = 0; it < data_buf_length; it++ )
+		{
+			m_allocator.construct( ( data_buf + it ), m_data[ _pos + it ] );
+		}
+		m_allocator.construct( ( m_data + _pos ), _value );
         m_size++;
-
-        for ( size_type it = _pos + 1; it < m_size; it++ ) m_allocator.construct( ( m_data + it ), r_buf[it - _pos - 1] );
-        for( size_type it = 0; it < r_buf_length; it++ ) m_allocator.destroy( r_buf + it );
-        m_allocator.deallocate( r_buf, r_buf_length );
+		for ( size_type it = _pos + 1; it < m_size; it++ )
+		{
+			m_allocator.construct( ( m_data + it ), data_buf[it - _pos - 1] );
+			m_allocator.destroy( ( data_buf + it - _pos - 1 ) );
+		}
+		m_allocator.deallocate( data_buf, data_buf_length );
     }
 
     // Internal front pusher (call only after capacity chk)
     void _push_front( const_reference _value )
     {
-        pointer data_buf = m_allocator.allocate(m_size);
-        for ( size_type it = 0; it < m_size; it++ )
-        {
-            m_allocator.construct( data_buf + it );
-            data_buf[it] = m_data[it];
-        }
-
-        m_allocator.construct( ( m_data + m_size ) );
-		m_data[0] = _value;
-        m_size++;
-
-        for ( size_type it = 1; it < m_size; it++ )
-        {
-            m_data[it] = data_buf[it-1];
-            m_allocator.destroy( data_buf + it - 1 );
-        }
-        m_allocator.deallocate( data_buf, m_size );
+		pointer data_buf = m_allocator.allocate( m_size );
+		for ( size_type it = 0; it < m_size; it++ )
+		{
+			m_allocator.construct( ( data_buf + it ), m_data[it] );
+		}
+		m_allocator.construct( m_data, _value );
+		m_size++;
+		for ( size_type it = 1; it < m_size; it++ )
+		{
+			m_allocator.construct( ( m_data + it ), data_buf[it - 1] );
+			m_allocator.destroy( data_buf + it - 1 );
+		}
+		m_allocator.deallocate( data_buf, ( m_size - 1 ) );
     }
 
     // Internal back pusher (call only after capacity chk)
     void _push_back( const_reference _value )
     {
-        m_allocator.construct( ( m_data + m_size ) );
-        m_data[m_size] = _value;
+        m_allocator.construct( ( m_data + m_size ), _value );
+        m_size++;
+    }
+
+	// Internal emplacer (call only after capacity chk)
+	template<class... Args>
+	void _emplace( size_type _pos, Args&&... _args )
+	{
+		if( _pos == 0 )
+        {
+            _emplace_front(_args);
+            return;
+        }
+
+        size_type data_buf_length = m_size - _pos;
+        pointer data_buf = m_allocator.allocate(data_buf_length);
+        for( size_type it = 0; it < data_buf_length; it++ )
+        {
+            m_allocator.construct( ( data_buf + it ), m_data[_pos + it] );
+        }
+        m_allocator.construct( ( m_data + _pos ), std::forward<Args&&>(_args)... );
+        m_size++;
+		for ( size_type it = _pos + 1; it < m_size; it++ ) 
+		{
+			m_allocator.construct( ( m_data + it ), data_bufs[it - _pos - 1] );
+			m_allocator.destroy( data_buf + it - _pos - 1 );
+		}
+        m_allocator.deallocate( data_buf, data_buf_length );
+	}
+
+	// Internal front emplacer (call only after capacity chk)
+	template<class... Args>
+	void _emplace_front( Args&&... _args )
+	{
+		pointer data_buf = m_allocator.allocate(m_size);
+        for ( size_type it = 0; it < m_size; it++ )
+        {
+            m_allocator.construct( ( data_buf + it ), m_data[it] );
+        }
+		m_allocator.construct( m_data, std::forward<Args&&>(_args) );
+        m_size++;
+        for ( size_type it = 1; it < m_size; it++ )
+        {
+            m_allocator.construct( ( m_data + it ), data_buf[it-1] );
+			m_allocator.destroy( data_buf + it - 1 );
+        }
+        m_allocator.deallocate( data_buf, ( m_size - 1 ) );
+	}
+
+	// Internal back emplacer (call only after capacity chk)
+	template<class... Args>
+    void _emplace_back( Args&&... _args )
+    {
+        m_allocator.construct( ( m_data + m_size ), std::forward<Args&&>(_args)... );
         m_size++;
     }
 
@@ -347,7 +394,6 @@ public:
         size_type i = 0;
         for( auto it = initl.begin(); it != initl.end(); it++, i++ )
         {
-			//// TODO: We can place allocation here to
 			m_allocator.construct( ( m_data + i ), *it );
         }
     }
@@ -430,13 +476,13 @@ public:
     // Get last element of array by reference
     reference back() noexcept
     {
-        return m_data[ m_size - 1 ];
+        return m_data[m_size - 1];
     }
 
     // Get last element of array by const reference
     const_reference back() const noexcept
     {
-        return m_data[ m_size - 1 ];
+        return m_data[m_size - 1];
     }
 
     // Get underlying array by pointer
@@ -503,7 +549,10 @@ public:
     // Clear vector (capacity not changed)
     void clear()
     {
-        _clear();
+		if( m_capacity != 0 )
+		{
+			_clear();
+		}
     }
 
     // Inserts value 'value' in position 'pos' by const reference
@@ -595,9 +644,7 @@ public:
             {
                 _realloc( m_capacity * 2 );
             }
-            pointer _value = m_allocator.allocate(1);
-            m_allocator.construct( _value, std::forward<Args&&>(args)... );
-            _insert( pos, *_value );
+            _emplace( pos, args );
         }
         else
         {

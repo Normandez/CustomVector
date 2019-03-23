@@ -575,9 +575,8 @@ int main( int argc, char* argv[] )
     testing::InitGoogleTest( &argc, argv );
 
     //CInsert insrt;
-	//std::vector<CInsert> vec1( 2, CInsert() );
-    //vec1.clear();
-    //vec1.assign( 2, insrt );
+	//CVector<CInsert> vec1( 2, CInsert() );
+    //vec1.insert( 0, insrt );
     //std::vector<CInsert> vec2 = std::move(vec1);
 
     //return 0;
