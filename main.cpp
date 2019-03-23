@@ -568,6 +568,26 @@ TEST_F( CVectorTest, InsertMethods )
     EXPECT_EQ( class_vec.data()[9].GetIntData(), inserted_val_class.GetIntData() );
     EXPECT_EQ( class_vec.data()[10].GetIntData(), 0 );
 }
+
+TEST_F( CVectorTest, EmplaceMethod )
+{
+	CVector<int> int_vec( 5, 5 );
+    EXPECT_EQ( int_vec.size(), 5 );
+    EXPECT_EQ( int_vec.capacity(), 5 );
+    EXPECT_EQ( int_vec.data()[2], 5 );
+    int emplaced_val_int = int_vec.emplace( 2, 10 );
+    EXPECT_EQ( int_vec.size(), 6 );
+    EXPECT_EQ( int_vec.capacity(), 10 );
+    EXPECT_EQ( emplaced_val_int, 10 );
+    EXPECT_EQ( int_vec.data()[2], emplaced_val_int );
+	EXPECT_EQ( int_vec.data()[0], 5 );
+
+    CVector<CInsert> class_vec( 5, CInsert() );
+    EXPECT_EQ( class_vec.size(), 5 );
+    EXPECT_EQ( class_vec.capacity(), 5 );
+    EXPECT_EQ( class_vec.data()[2].GetIntData(), 0 );
+    
+}
 // ============================================================
 
 int main( int argc, char* argv[] )
@@ -575,8 +595,8 @@ int main( int argc, char* argv[] )
     testing::InitGoogleTest( &argc, argv );
 
     //CInsert insrt;
-	//CVector<CInsert> vec1( 2, CInsert() );
-    //vec1.insert( 0, insrt );
+	//std::vector<CInsert> vec1( 2, CInsert() );
+    //vec1.emplace();
     //std::vector<CInsert> vec2 = std::move(vec1);
 
     //return 0;

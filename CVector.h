@@ -217,7 +217,7 @@ private:
 	{
 		if( _pos == 0 )
         {
-            _emplace_front(_args);
+            _emplace_front( std::forward<Args&&>(_args)... );
             return;
         }
 
@@ -231,7 +231,7 @@ private:
         m_size++;
 		for ( size_type it = _pos + 1; it < m_size; it++ ) 
 		{
-			m_allocator.construct( ( m_data + it ), data_bufs[it - _pos - 1] );
+			m_allocator.construct( ( m_data + it ), data_buf[it - _pos - 1] );
 			m_allocator.destroy( data_buf + it - _pos - 1 );
 		}
         m_allocator.deallocate( data_buf, data_buf_length );
@@ -246,7 +246,7 @@ private:
         {
             m_allocator.construct( ( data_buf + it ), m_data[it] );
         }
-		m_allocator.construct( m_data, std::forward<Args&&>(_args) );
+		m_allocator.construct( m_data, std::forward<Args&&>(_args)... );
         m_size++;
         for ( size_type it = 1; it < m_size; it++ )
         {
@@ -644,7 +644,7 @@ public:
             {
                 _realloc( m_capacity * 2 );
             }
-            _emplace( pos, args );
+            _emplace( pos, std::forward<Args&&>(args)... );
         }
         else
         {
