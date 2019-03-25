@@ -655,6 +655,25 @@ TEST_F( CVectorTest, PushBackMethod )
 	EXPECT_EQ( class_vec.capacity(), 10 );
 	EXPECT_EQ( class_vec.at(5).GetIntData(), 10 );
 }
+
+TEST_F( CVectorTest, EmplaceBackMethod )
+{
+	CVector<int> int_vec( 5, 5 );
+	EXPECT_EQ( int_vec.size(), 5 );
+	EXPECT_EQ( int_vec.capacity(), 5 );
+	int_vec.emplace_back(13);
+	EXPECT_EQ( int_vec.size(), 6 );
+	EXPECT_EQ( int_vec.capacity(), 10 );
+	EXPECT_EQ( int_vec.at(5), 13 );
+
+	CVector<CInsert> class_vec( 5, CInsert() );
+	EXPECT_EQ( class_vec.size(), 5 );
+	EXPECT_EQ( class_vec.capacity(), 5 );
+	class_vec.emplace_back(13);
+	EXPECT_EQ( class_vec.size(), 6 );
+	EXPECT_EQ( class_vec.capacity(), 10 );
+	EXPECT_EQ( class_vec.at(5).GetIntData(), 13 );
+}
 // ============================================================
 
 int main( int argc, char* argv[] )

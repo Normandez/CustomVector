@@ -695,17 +695,13 @@ public:
 
 	// Inserts element in the end of the container 'pos' via T() constructor
     template<class... Args>
-    reference emplace_back( Args&&... args )
+    void emplace_back( Args&&... args )
     {
         if( ( m_size + 1 ) > m_capacity )
         {
             _realloc( m_capacity * 2 );
         }
-        pointer _value = m_allocator.allocate(1);
-        m_allocator.construct( _value,  std::forward<Args&&>(args)...);
-		_insert( m_size, *_value );
-
-        return m_data[m_size];
+		_emplace_back( std::forward<Args&&>(args)... );
     }
 
 	// Removes the last element of the container
