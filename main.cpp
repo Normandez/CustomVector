@@ -743,6 +743,31 @@ TEST_F( CVectorTest, SwapMethod )
 	EXPECT_EQ( int_vec_2.at(0), 1 );
 	EXPECT_EQ( int_vec_2.at(6), 7 );
 }
+
+TEST_F( CVectorTest, FriendSwapFunc )
+{
+	CVector<int> int_vec_1( { 1, 2, 3, 4, 5, 6, 7 } );
+	CVector<int> int_vec_2( { 8, 9, 10 } );
+	EXPECT_EQ( int_vec_1.size(), 7 );
+	EXPECT_EQ( int_vec_1.capacity(), 7 );
+	EXPECT_EQ( int_vec_2.size(), 3 );
+	EXPECT_EQ( int_vec_2.capacity(), 3 );
+	EXPECT_EQ( int_vec_1.at(0), 1 );
+	EXPECT_EQ( int_vec_1.at(6), 7 );
+	EXPECT_EQ( int_vec_2.at(0), 8 );
+	EXPECT_EQ( int_vec_2.at(2), 10 );
+
+	swap( int_vec_1, int_vec_2 );
+
+	EXPECT_EQ( int_vec_1.size(), 3 );
+	EXPECT_EQ( int_vec_1.capacity(), 3 );
+	EXPECT_EQ( int_vec_2.size(), 7 );
+	EXPECT_EQ( int_vec_2.capacity(), 7 );
+	EXPECT_EQ( int_vec_1.at(0), 8 );
+	EXPECT_EQ( int_vec_1.at(2), 10 );
+	EXPECT_EQ( int_vec_2.at(0), 1 );
+	EXPECT_EQ( int_vec_2.at(6), 7 );
+}
 // ============================================================
 
 int main( int argc, char* argv[] )
