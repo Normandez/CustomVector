@@ -674,6 +674,19 @@ TEST_F( CVectorTest, EmplaceBackMethod )
 	EXPECT_EQ( class_vec.capacity(), 10 );
 	EXPECT_EQ( class_vec.at(5).GetIntData(), 13 );
 }
+
+TEST_F( CVectorTest, PopBackMethod )
+{
+	CVector<int> int_vec( 5, 5 );
+	int_vec.pop_back();
+	EXPECT_EQ( int_vec.size(), 4 );
+	EXPECT_EQ( int_vec.capacity(), 5 );
+
+	CVector<CInsert> class_vec( 5, CInsert() );
+	class_vec.pop_back();
+	EXPECT_EQ( class_vec.size(), 4 );
+	EXPECT_EQ( class_vec.capacity(), 5 );
+}
 // ============================================================
 
 int main( int argc, char* argv[] )
