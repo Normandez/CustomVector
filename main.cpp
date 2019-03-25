@@ -768,6 +768,19 @@ TEST_F( CVectorTest, FriendSwapFunc )
 	EXPECT_EQ( int_vec_2.at(0), 1 );
 	EXPECT_EQ( int_vec_2.at(6), 7 );
 }
+
+TEST_F( CVectorTest, FriendCompareOperatorFuncs )
+{
+	CVector<int> int_vec_1( { 1, 2, 3, 4, 5, 6, 7 } );
+	CVector<int> int_vec_2( { 8, 9, 10 } );
+
+	EXPECT_FALSE( int_vec_1 == int_vec_2 );
+	EXPECT_TRUE( int_vec_1 != int_vec_2 );
+	EXPECT_FALSE( int_vec_1 > int_vec_2 );
+	EXPECT_FALSE( int_vec_1 >= int_vec_2 );
+	EXPECT_TRUE( int_vec_1 < int_vec_2 );
+	EXPECT_TRUE( int_vec_1 <= int_vec_2 );
+}
 // ============================================================
 
 int main( int argc, char* argv[] )
