@@ -293,16 +293,14 @@ private:
 		}
     }
 
-    // Internal resizer
-    void _resize( size_type _count, const_reference _value = value_type )
+    // Internal resizer (init by default)
+    void _resize( size_type _count )
     {
         if( _count < m_size )
         {
             for( size_type it = _count; it < m_size; it++ )
             {
                 m_allocator.destroy( m_data + it );
-                m_allocator.construct( m_data + it );
-                m_data[it] = _value;
             }
         }
         else if( _count > m_size )
@@ -312,10 +310,34 @@ private:
                 _realloc( m_capacity * 2 );
             }
 
-            for( size_type it = m_size; it <= _count; it++ )
+            for( size_type it = m_size; it < _count; it++ )
             {
-                m_allocator.construct( m_data + it );
-                m_data[it] = _value;
+                m_allocator.construct( ( m_data + it ), value_type() );
+            }
+        }
+        m_size = _count;
+    }
+
+	// Internal resizer (init by value)
+    void _resize( size_type _count, const_reference _value )
+    {
+        if( _count < m_size )
+        {
+            for( size_type it = _count; it < m_size; it++ )
+            {
+                m_allocator.destroy( m_data + it );
+            }
+        }
+        else if( _count > m_size )
+        {
+            if( _count > m_capacity )
+            {
+                _realloc( m_capacity * 2 );
+            }
+
+            for( size_type it = m_size; it < _count; it++ )
+            {
+                m_allocator.construct( ( m_data + it ), _value );
             }
         }
         m_size = _count;

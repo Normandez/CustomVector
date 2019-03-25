@@ -687,6 +687,37 @@ TEST_F( CVectorTest, PopBackMethod )
 	EXPECT_EQ( class_vec.size(), 4 );
 	EXPECT_EQ( class_vec.capacity(), 5 );
 }
+
+TEST_F( CVectorTest, ResizeMethod )
+{
+	CVector<int> int_vec( 5, 5 );
+	int_vec.resize(3);
+	EXPECT_EQ( int_vec.size(), 3 );
+	EXPECT_EQ( int_vec.capacity(), 5 );
+	int_vec.resize(5);
+	EXPECT_EQ( int_vec.size(), 5 );
+	EXPECT_EQ( int_vec.capacity(), 5 );
+	EXPECT_EQ( int_vec.at(4), 0 );
+	int_vec.resize( 8, 13 );
+	EXPECT_EQ( int_vec.size(), 8 );
+	EXPECT_EQ( int_vec.capacity(), 10 );
+	EXPECT_EQ( int_vec.at(7), 13 );
+
+	CVector<CInsert> class_vec( 5, CInsert() );
+	class_vec.resize(3);
+	EXPECT_EQ( class_vec.size(), 3 );
+	EXPECT_EQ( class_vec.capacity(), 5 );
+	class_vec.resize(5);
+	EXPECT_EQ( class_vec.size(), 5 );
+	EXPECT_EQ( class_vec.capacity(), 5 );
+	EXPECT_EQ( class_vec.at(4).GetIntData(), 0 );
+	CInsert insrt;
+	insrt.SetIntData();
+	class_vec.resize( 8, insrt );
+	EXPECT_EQ( class_vec.size(), 8 );
+	EXPECT_EQ( class_vec.capacity(), 10 );
+	EXPECT_EQ( class_vec.at(7).GetIntData(), 10 );
+}
 // ============================================================
 
 int main( int argc, char* argv[] )
@@ -694,8 +725,8 @@ int main( int argc, char* argv[] )
     testing::InitGoogleTest( &argc, argv );
 
     //CInsert insrt;
-	//CVector<CInsert> vec1( 2, CInsert() );
-	//vec1.push_back(insrt);
+	//CVector<CInsert> vec1( 5, CInsert() );
+	//vec1.resize(8, CInsert());
     //std::vector<CInsert> vec2 = std::move(vec1);
 
     //return 0;
