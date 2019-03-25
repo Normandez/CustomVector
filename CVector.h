@@ -2,10 +2,6 @@
 #define CVECTOR_H
 
 #include <memory>
-#include <stdexcept>
-#include <utility>
-#include <initializer_list>
-#include <algorithm>
 
 template<class T>
 class CVector
