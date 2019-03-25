@@ -597,6 +597,43 @@ TEST_F( CVectorTest, EmplaceMethod )
     EXPECT_EQ( class_vec.capacity(), 10 );
 	EXPECT_EQ( class_vec.data()[2].GetIntData(), emplaced_class_val.GetIntData() );
 }
+
+TEST_F( CVectorTest, EraseMethods )
+{
+	CVector<int> int_vec( { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } );
+	EXPECT_EQ( int_vec.size(), 10 );
+	EXPECT_EQ( int_vec.capacity(), 10 );
+	EXPECT_EQ( int_vec.at(2), 3 );
+	EXPECT_EQ( int_vec.at(9), 10 );
+	int erased_int_val = int_vec.erase(2);
+	EXPECT_EQ( int_vec.size(), 9 );
+	EXPECT_EQ( erased_int_val, 4 );
+	EXPECT_EQ( int_vec.at(2), erased_int_val );
+	erased_int_val = int_vec.erase(8);
+	EXPECT_EQ( int_vec.size(), 8 );
+	EXPECT_EQ( erased_int_val, 9 );
+	EXPECT_EQ( int_vec.back(), erased_int_val );
+	erased_int_val = int_vec.erase( 2, 5 );
+	EXPECT_EQ( int_vec.size(), 5 );
+	EXPECT_EQ( erased_int_val, 7 );
+	EXPECT_EQ( int_vec.at(2), erased_int_val );
+	erased_int_val = int_vec.erase( 0, 4 );
+	EXPECT_EQ( int_vec.size(), 1 );
+	EXPECT_EQ( erased_int_val, 9 );
+	EXPECT_EQ( int_vec.at(0), erased_int_val );
+	int_vec.erase(0);
+	EXPECT_EQ( int_vec.size(), 0 );
+	EXPECT_EQ( int_vec.capacity(), 10 );
+
+	CInsert insrt_1(1), insrt_2(2), insrt_3(3);
+	CVector<CInsert> class_vec( { insrt_1, insrt_2, insrt_3 } );
+	EXPECT_EQ( class_vec.size(), 3 );
+	EXPECT_EQ( class_vec.at(1).GetIntData(), 2 );
+	CInsert erased_class_val = class_vec.erase(1);
+	EXPECT_EQ( erased_class_val.GetIntData(), class_vec.at(1).GetIntData() );
+	EXPECT_EQ( class_vec.size(), 2 );
+	EXPECT_EQ( class_vec.capacity(), 3 );
+}
 // ============================================================
 
 int main( int argc, char* argv[] )

@@ -268,26 +268,16 @@ private:
     void _remove_at( size_type _pos )
     {
         m_allocator.destroy( ( m_data + _pos ) );
+		if( _pos == m_size )	// Last element case
+		{
+			return;
+		}
 
-        if( _pos == m_size ) return;   // Last element case
-
-        pointer data_buf = m_data;
-        m_data = nullptr;
-        _alloc(true);
-        for( size_type it = 0; it < m_size; it++ )
-        {
-            if( it >= _pos )
-            {
-                m_data[it] = data_buf[it+1];
-                m_allocator.destroy( data_buf + it + 1 );
-            }
-            else
-            {
-                m_data[it] = data_buf[it];
-                m_allocator.destroy( data_buf + it );
-            }
-        }
-        m_allocator.deallocate( data_buf, m_size - 1 );
+		for( size_type it = _pos; it < m_size; it++ )
+		{
+			m_allocator.destroy( m_data + it );
+			m_allocator.construct( ( m_data + it ), m_data[it + 1] );
+		}
     }
 
     // Internal in range remover [_first; _last)
@@ -295,23 +285,12 @@ private:
     {
         for( size_type it = _first; it < _last; it++ ) m_allocator.destroy( ( m_data + it ) );
         
-        pointer buf_data = m_data;
-        m_data = nullptr;
-        _alloc(true);
-        for( size_type it = 0; it < m_size; it++ )
-        {
-            if( it >= _first )
-            {
-                m_data[it] = buf_data[it + ( _last - _first )];
-                m_allocator.destroy( buf_data + it + ( _last - _first ) );
-            }
-            else
-            {
-                m_data[it] = buf_data[it];
-                m_allocator.destroy( buf_data + it );
-            }
-        }
-        m_allocator.deallocate( buf_data, ( _last - _first ) );
+		size_type remove_dif = _last - _first;
+		for( size_type it = _first; it < m_size; it++ )
+		{
+			m_allocator.destroy( m_data + it );
+			m_allocator.construct( ( m_data + it ), m_data[it + remove_dif] );
+		}
     }
 
     // Internal resizer
@@ -666,14 +645,14 @@ public:
             throw std::length_error("'pos' is out of range");
         }
 
-        if( pos == m_size )
-        {
-            return m_data[pos-1];
-        }
-        else
-        {
-            return m_data[pos];
-        }
+		if ( pos == m_size )
+		{
+			return m_data[pos - 1];
+		}
+		else
+		{
+			return m_data[pos];
+		}
     }
 
     // Removes element in range [first; last) and returns reference on element after removed
@@ -689,7 +668,7 @@ public:
             throw std::length_error("'pos' is out of range");
         }
 
-        return m_data[last - (last - first)];
+		return m_data[last - ( last - first )];
     }
 
     // Appends the given element value to the end of the container by const reference
